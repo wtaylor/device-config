@@ -1,0 +1,62 @@
+- name: Include Install Tasks
+  include_tasks: install.yaml
+- name: Write cloudflare credentials to file
+  become: true
+  copy:
+    content: |
+      dns_cloudflare_api_token = {{ cloudflare_token }}
+    dest: /root/cloudflare.ini
+    owner: root
+    group: root
+    mode: '0600'
+- name: Ensure pre/post/deploy hook folders exist.
+  file:
+    path: /etc/letsencrypt/renewal-hooks/{{ item }}
+    state: directory
+    mode: '0755'
+    owner: root
+    group: root
+  with_items:
+  - pre
+  - post
+  - deploy
+- name: Copy Deploy Hook
+  copy:
+    content: "{{ deploy_hook }}"
+    dest: /etc/letsencrypt/renewal-hooks/deploy/ansible-certificate-hook
+    owner: root
+    group: root
+    mode: '0750'
+- name: Copy certificate renewal systemd service
+  become: true
+  copy:
+    src: systemd/certificate-renewal.service
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0755'
+- name: Copy certificate renewal systemd timer
+  become: true
+  copy:
+    src: systemd/certificate-renewal.timer
+    dest: /etc/systemd/system/
+    owner: root
+    group: root
+    mode: '0755'
+- name: Start and enable certificate renewal timer
+  become: true
+  systemd:
+    name: certificate-renewal.timer
+    state: started
+    enabled: true
+    daemon_reload: true
+- name: Check if certificate already exists
+  stat:
+    path: /etc/letsencrypt/live/{{ domains | first | replace('*.', '') }}/cert.pem
+  register: certificate_pem
+- name: Generate certificates # noqa no-changed-when
+  become: true
+  when: not certificate_pem.stat.exists
+  command: >
+    certbot certonly --non-interactive --agree-tos --email {{ contact_mail }} --deploy-hook /etc/letsencrypt/renewal-hooks/deploy/ansible-certificate-hook --dns-cloudflare --dns-cloudflare-credentials /root/cloudflare.ini -d {{ domains | join(' -d ') }}
+

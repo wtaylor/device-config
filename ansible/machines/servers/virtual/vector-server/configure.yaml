@@ -1,0 +1,21 @@
+- hosts: vector-server.willtaylor.info
+  remote_user: root
+  roles:
+  - role: ../../../../common/roles/servers/certificates
+    contact_mail: me@willtaylor.info
+    cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
+    domains:
+    - "vector.tk831.net"
+    deploy_hook: |
+      #!/bin/sh
+
+      VECTOR_CERT_DIR="/mnt/vector/config"
+
+      cat $RENEWED_LINEAGE/cert.pem > $VECTOR_CERT_DIR/cert.pem
+      cat $RENEWED_LINEAGE/fullchain.pem > $VECTOR_CERT_DIR/fullchain.pem
+      cat $RENEWED_LINEAGE/cert.pem > $VECTOR_CERT_DIR/privkey.pem
+
+      chown vector:vector $VECTOR_CERT_DIR/cert.pem
+      chown vector:vector $VECTOR_CERT_DIR/fullchain.pem
+      chown vector:vector $VECTOR_CERT_DIR/privkey.pem
+  - role: ./roles/configure-vector

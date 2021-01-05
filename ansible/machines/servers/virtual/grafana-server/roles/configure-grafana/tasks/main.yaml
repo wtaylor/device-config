@@ -1,0 +1,54 @@
+- name: Ensure grafana config directories exist
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: grafana
+    group: grafana
+    mode: '0750'
+  loop:
+  - /mnt/grafana/config
+  - /mnt/grafana/data
+  - /mnt/grafana/plugins
+  - /mnt/grafana/provisioning
+- name: Get grafana related keys from vault
+  ansible.builtin.set_fact:
+    smtp_username: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/common/smtp-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+    smtp_password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/common/smtp-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
+    sso_client_id: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/grafana/sso-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.client_id }}"
+    sso_client_secret: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/grafana/sso-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.client_secret }}"
+    grafana_cookie_signing_secret: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/grafana/cookie-secret', url=vault_address, engine_mount_point=vault_secret_mount)).secret.signing_secret }}"
+- name: Generate grafana.ini
+  template:
+    src: grafana.ini.j2
+    dest: /mnt/grafana/config/grafana.ini
+    owner: grafana
+    group: grafana
+    mode: '0640'
+- name: Copy Systemd EnvironmentFile Overrides
+  copy:
+    src: systemd-environmentfile-override.conf
+    dest: /mnt/grafana/config/systemd-environmentfile-override.conf
+    owner: grafana
+    group: grafana
+    mode: '0640'
+- name: Ensure Systemd grafana-server.service.d Directory Exists
+  ansible.builtin.file:
+    name: /etc/systemd/system/grafana-server.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+- name: Override grafana.service Systemd Unit
+  copy:
+    dest: /etc/systemd/system/grafana-server.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Service]
+      EnvironmentFile=/mnt/grafana/config/systemd-environmentfile-override.conf
+- name: Start And Enable grafana-server
+  ansible.builtin.systemd:
+    name: grafana-server
+    state: started
+    enabled: true

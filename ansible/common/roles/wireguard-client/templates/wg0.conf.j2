@@ -1,0 +1,16 @@
+[Interface]
+PrivateKey = {{ interface.privateKey }}
+Address = {{ interface.address }}
+{% if interface.dns is defined %}
+DNS = {{ interface.dns }}
+{% endif %}
+{% if interface.post_up is defined %}
+PostUp = {{ interface.post_up }}
+{% endif %}
+
+{% for peer in peers %}
+[Peer]
+PublicKey = {{ peer.publicKey }}
+AllowedIPs = {{ peer.allowedIps }}
+Endpoint = {{ peer.endpoint }}
+{% endfor %}

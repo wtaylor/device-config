@@ -1,0 +1,34 @@
+- name: Download datadog apt repository keys
+  ansible.builtin.get_url:
+    url: "https://keys.datadoghq.com/{{ item }}.public"
+    dest: "/usr/share/keyrings/datadog-archive-keyring-{{ item }}.asc_seperate"
+    mode: '0644'
+    force: true
+  loop:
+  - DATADOG_APT_KEY_CURRENT
+  - DATADOG_APT_KEY_F14F620E
+  - DATADOG_APT_KEY_C0962C7D
+- name: Ensure datadog-archive-keyring exists
+  file:
+    state: touch
+    path: /usr/share/keyrings/datadog-archive-keyring.gpg
+    owner: root
+    group: root
+    mode: '0755'
+- name: Configure keyring
+  shell: |
+    cat /usr/share/keyrings/datadog-archive-keyring-DATADOG_APT_KEY_CURRENT.asc_seperate | gpg --no-default-keyring --keyring /usr/share/keyrings/datadog-archive-keyring.gpg --import --batch
+    cat /usr/share/keyrings/datadog-archive-keyring-DATADOG_APT_KEY_F14F620E.asc_seperate | gpg --no-default-keyring --keyring /usr/share/keyrings/datadog-archive-keyring.gpg --import --batch
+    cat /usr/share/keyrings/datadog-archive-keyring-DATADOG_APT_KEY_C0962C7D.asc_seperate | gpg --no-default-keyring --keyring /usr/share/keyrings/datadog-archive-keyring.gpg --import --batch
+  args:
+    creates: /usr/share/keyrings/docker-archive-keyring.gpg
+- name: Add vector apt deb repository
+  apt_repository:
+    repo: deb [signed-by=/usr/share/keyrings/datadog-archive-keyring.gpg] https://apt.vector.dev/ stable vector-0
+    filename: vector
+    state: present
+- name: Install vector
+  apt:
+    state: latest
+    name:
+    - vector

@@ -1,0 +1,2 @@
+- name: Include pkg_mgr specific tasks
+  include_tasks: "pkg_mgr/{{ ansible_facts['pkg_mgr'] | lower }}.yaml"

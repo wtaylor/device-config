@@ -1,0 +1,5 @@
+- name: Restart VictoriaLogs service
+  become: true
+  ansible.builtin.systemd:
+    name: victorialogs
+    state: restarted

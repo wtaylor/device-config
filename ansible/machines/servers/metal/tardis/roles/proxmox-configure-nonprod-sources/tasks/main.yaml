@@ -1,0 +1,29 @@
+- name: Ensure pve-enterprise repository does not exist
+  become: true
+  file:
+    path: /etc/apt/sources.list.d/pve-enterprise.list
+    state: absent
+- name: Ensure pve-no-subscription repository is configured
+  become: true
+  copy:
+    dest: /etc/apt/sources.list.d/pve-no-subscription.list
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      # PVE pve-no-subscription repository provided by proxmox.com,
+      # NOT recommended for production use
+      deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+- name: Disable subscription nag messages
+  become: true
+  copy:
+    dest: /etc/apt/apt.conf.d/no-nag-script
+    owner: root
+    group: root
+    mode: '0755'
+    content: |
+      DPkg::Post-Invoke { "dpkg -V proxmox-widget-toolkit | grep -q '/proxmoxlib\.js$'; if [ $? -eq 1 ]; then { echo 'Removing subscription nag from UI...'; sed -i '/data\.status.*{/{s/\!//;s/active/NoMoreNagging/}' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; }; fi"; };
+- name: Refresh apt
+  become: true
+  apt:
+    update_cache: true

@@ -1,0 +1,48 @@
+- name: Enable IOMMU in grub
+  become: true
+  lineinfile:
+    path: /etc/default/grub
+    regexp: '^GRUB_CMDLINE_LINUX_DEFAULT='
+    line: GRUB_CMDLINE_LINUX_DEFAULT="quiet amd_iommu=on iommu=pt video=efifb:off"
+  register: grub_defaults
+  notify: Update Grub
+- name: Enable vfio module
+  become: true
+  lineinfile:
+    path: /etc/modules
+    line: vfio
+  notify: Reboot System
+- name: Enable vfio_iommu_type1 module
+  become: true
+  lineinfile:
+    path: /etc/modules
+    line: vfio_iommu_type1
+  notify: Reboot System
+- name: Enable vfio_pci module
+  become: true
+  lineinfile:
+    path: /etc/modules
+    line: vfio_pci
+  notify: Reboot System
+- name: Enable vfio_virqfd module
+  become: true
+  lineinfile:
+    path: /etc/modules
+    line: vfio_virqfd
+  register: vfio_virqfd_module
+- name: Ensure kvm modprobe config file exists
+  become: true
+  file:
+    path: /etc/modprobe.d/kvm.conf
+    state: touch
+    owner: root
+    group: root
+    mode: '0644'
+    access_time: preserve
+    modification_time: preserve
+- name: Configure msrs
+  become: true
+  lineinfile:
+    path: /etc/modprobe.d/kvm.conf
+    line: options kvm ignore_msrs=1 report_ignored_msrs=0
+  register: configure_msrs

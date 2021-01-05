@@ -1,0 +1,95 @@
+# Put this file to one of the location, with descending priority
+#    ./security.toml
+#    $HOME/.seaweedfs/security.toml
+#    /etc/seaweedfs/security.toml
+# this file is read by master, volume server, and filer
+
+# this jwt signing key is read by master and volume server, and it is used for write operations:
+# - the Master server generates the JWT, which can be used to write a certain file on a volume server
+# - the Volume server validates the JWT on writing
+# the jwt defaults to expire after 10 seconds.
+[jwt.signing]
+key = "{{ jwt_signing_keys['jwt-signing'] }}"
+expires_after_seconds = 7200           # seconds
+
+# by default, if the signing key above is set, the Volume UI over HTTP is disabled.
+# by setting ui.access to true, you can re-enable the Volume UI. Despite
+# some information leakage (as the UI is not authenticated), this should not
+# pose a security risk.
+[access]
+ui = false
+
+# this jwt signing key is read by master and volume server, and it is used for read operations:
+# - the Master server generates the JWT, which can be used to read a certain file on a volume server
+# - the Volume server validates the JWT on reading
+# NOTE: jwt for read is only supported with master+volume setup. Filer does not support this mode.
+# [jwt.signing.read]
+# key = "{{ jwt_signing_keys['jwt-signing-read'] }}"
+# expires_after_seconds = 7200           # seconds
+
+
+# If this JWT key is configured, Filer only accepts writes over HTTP if they are signed with this JWT:
+# - f.e. the S3 API Shim generates the JWT
+# - the Filer server validates the JWT on writing
+# the jwt defaults to expire after 10 seconds.
+[jwt.filer_signing]
+key = "{{ jwt_signing_keys['jwt-filer-signing'] }}"
+expires_after_seconds = 7200           # seconds
+
+# If this JWT key is configured, Filer only accepts reads over HTTP if they are signed with this JWT:
+# - f.e. the S3 API Shim generates the JWT
+# - the Filer server validates the JWT on writing
+# the jwt defaults to expire after 10 seconds.
+[jwt.filer_signing.read]
+key = "{{ jwt_signing_keys['jwt-filer-signing-read'] }}"
+expires_after_seconds = 7200           # seconds
+
+# all grpc tls authentications are mutual
+# the values for the following ca, cert, and key are paths to the PERM files.
+# the host name is not checked, so the PERM files can be shared.
+[grpc]
+ca = "/etc/seaweedfs/certificates/ca/ca.cert"
+# Set wildcard domain for enable TLS authentication by common names
+allowed_wildcard_domain = ".willtaylor.info" # .mycompany.com
+
+[grpc.volume]
+cert = "/etc/seaweedfs/certificates/volume/mtls.cert"
+key = "/etc/seaweedfs/certificates/volume/mtls.key"
+allowed_commonNames = "volume1.seaweed.willtaylor.info"    # comma-separated SSL certificate common names
+
+[grpc.master]
+cert = "/etc/seaweedfs/certificates/master/mtls.cert"
+key = "/etc/seaweedfs/certificates/master/mtls.key"
+allowed_commonNames = "master.seaweed.willtaylor.info"    # comma-separated SSL certificate common names
+
+[grpc.filer]
+cert = "/etc/seaweedfs/certificates/filer/mtls.cert"
+key = "/etc/seaweedfs/certificates/filer/mtls.key"
+allowed_commonNames = "filer.seaweed.willtaylor.info"    # comma-separated SSL certificate common names
+
+[grpc.s3]
+cert = "/etc/seaweedfs/certificates/s3/mtls.cert"
+key = "/etc/seaweedfs/certificates/s3/mtls.key"
+allowed_commonNames = "s3.seaweed.willtaylor.info"    # comma-separated SSL certificate common names
+
+# use this for any place needs a grpc client
+# i.e., "weed backup|benchmark|filer.copy|filer.replicate|mount|s3|upload"
+[grpc.client]
+cert = "/etc/seaweedfs/certificates/client/mtls.cert"
+key = "/etc/seaweedfs/certificates/client/mtls.key"
+
+# volume server https options
+# Note: work in progress!
+#     this does not work with other clients, e.g., "weed filer|mount" etc, yet.
+[https.client]
+enabled = false
+
+[https.volume]
+cert = ""
+key = ""
+ca = ""
+
+[https.master]
+cert = ""
+key = ""
+ca = ""

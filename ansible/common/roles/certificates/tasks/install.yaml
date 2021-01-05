@@ -1,0 +1,23 @@
+- name: Install Dependencies
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+    - python3
+    - python3-venv
+    - python3-virtualenv
+    - libaugeas0
+- name: Install certbot In Venv
+  become: true
+  ansible.builtin.pip:
+    state: present
+    virtualenv: /opt/certbot
+    name:
+    - certbot
+    - certbot-dns-cloudflare
+- name: Symlink certbot To /usr/bin
+  become: true
+  ansible.builtin.file:
+    state: link
+    src: /opt/certbot/bin/certbot
+    dest: /usr/bin/certbot

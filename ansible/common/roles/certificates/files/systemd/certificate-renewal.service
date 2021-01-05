@@ -1,0 +1,5 @@
+[Unit]
+Description=Let's Encrypt certificate renewal
+
+[Service]
+ExecStart=/usr/bin/certbot renew --quiet --agree-tos --deploy-hook /etc/letsencrypt/renewal-hooks/deploy/ansible-certificate-hook

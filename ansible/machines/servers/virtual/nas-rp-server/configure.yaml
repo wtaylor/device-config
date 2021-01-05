@@ -1,0 +1,14 @@
+- hosts: nas-rp-server.willtaylor.info
+  remote_user: root
+  roles:
+  - role: ../../../../common/roles/update-system
+  - role: ../../../../common/roles/servers/reverse-proxy
+    proxy_hosts:
+    - domain: vault.willtaylor.info
+      dest: http://vault-server.willtaylor.info:8200
+    - domain: "*.s3.willtaylor.info"
+      dest: http://seaweed-server.willtaylor.info:8333
+    - domain: s3.willtaylor.info
+      dest: http://seaweed-server.willtaylor.info:8333
+    - domain: grafana.tk831.net
+      dest: http://grafana-server.willtaylor.info:3000

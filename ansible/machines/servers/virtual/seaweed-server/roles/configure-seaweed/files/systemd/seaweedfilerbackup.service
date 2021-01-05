@@ -1,0 +1,15 @@
+[Unit]
+Description=SeaweedFS Volume
+After=network.target
+
+[Service]
+Type=simple
+User=seaweedfs
+Group=seaweedfs
+
+ExecStart=/usr/bin/weed filer.backup -filerExcludePaths="/buckets/ssdnb-,/buckets/hddnb-"
+WorkingDirectory=/home/seaweedfs
+SyslogIdentifier=seaweedfs-filerbackup
+
+[Install]
+WantedBy=multi-user.target

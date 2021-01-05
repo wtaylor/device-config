@@ -1,0 +1,15 @@
+[Unit]
+Description=SeaweedFS Master
+After=network.target
+
+[Service]
+Type=simple
+User=seaweedfs
+Group=seaweedfs
+
+ExecStart=/usr/bin/weed master -volumeSizeLimitMB=1024 -volumePreallocate -mdir=/mnt/mdir-data -ip.bind=0.0.0.0
+WorkingDirectory=/home/seaweedfs
+SyslogIdentifier=seaweedfs-master
+
+[Install]
+WantedBy=multi-user.target

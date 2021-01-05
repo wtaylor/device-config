@@ -1,0 +1,8 @@
+- name: Upload gpu rom to snippets folder
+  become: true
+  copy:
+    src: zotac_1080ti_mini_clean.rom
+    dest: /usr/share/kvm/zotac_1080ti_mini_clean.rom
+    owner: root
+    group: root
+    mode: '0644'

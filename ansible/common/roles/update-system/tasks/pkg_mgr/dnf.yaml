@@ -1,0 +1,6 @@
+- name: dnf update
+  become: true
+  dnf:
+    update_cache: true
+    name: '*'
+    state: latest

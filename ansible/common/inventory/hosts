@@ -1,0 +1,16 @@
+tardis ansible_host=tardis.willtaylor.info
+wireguard-server ansible_host=wireguard.willtaylor.info
+vault-server.willtaylor.info
+zigbee-coordinator
+seaweed-server.willtaylor.info
+grafana-server.willtaylor.info
+metrics-server.willtaylor.info
+logs-server.willtaylor.info
+vector-server.willtaylor.info
+nas-rp-server.willtaylor.info
+external-insight ansible_host=64.227.65.173
+
+[all:vars]
+ansible_python_interpreter=auto_silent
+vault_address=https://vault.willtaylor.info
+vault_secret_mount=kv

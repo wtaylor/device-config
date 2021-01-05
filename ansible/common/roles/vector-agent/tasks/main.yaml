@@ -1,0 +1,66 @@
+- name: Include distribution specific tasks
+  include_tasks: "distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
+- name: Ensure vector data directory exists
+  file:
+    path: "{{ data_directory | default('/var/lib/vector') }}"
+    state: directory
+    owner: vector
+    group: vector
+    mode: '0755'
+- name: Ensure vector tls directory exists
+  file:
+    path: /etc/vector/tls
+    state: directory
+    owner: root
+    group: vector
+    mode: 0750
+- name: Write vector config
+  copy:
+    content: "{{ vector_config | to_nice_yaml }}"
+    dest: /etc/vector/vector.yaml
+    owner: root
+    group: root
+    mode: '0644'
+- name: Write tls configuration ca.pem
+  copy:
+    content: "{{ tls.ca_pem }}"
+    dest: /etc/vector/tls/ca.pem
+    owner: root
+    group: root
+    mode: '0644'
+- name: Write tls configuration cert.crt
+  copy:
+    content: "{{ tls.cert_crt }}"
+    dest: /etc/vector/tls/cert.crt
+    owner: root
+    group: root
+    mode: '0644'
+- name: Write tls configuration cert.key
+  copy:
+    content: "{{ tls.cert_key }}"
+    dest: /etc/vector/tls/cert.key
+    owner: root
+    group: root
+    mode: '0644'
+- name: Ensure vector systemd override directory exists
+  file:
+    path: /etc/systemd/system/vector.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+- name: Override vector systemd unit
+  copy:
+    content: |
+      [Service]
+      ExecStart=
+      ExecStart=/usr/bin/vector --config /etc/vector/vector.yaml --watch-config
+    dest: /etc/systemd/system/vector.service.d/override.conf
+    owner: root
+    group: root
+    mode: '0644'
+- name: Start and enable vector
+  systemd:
+    name: vector
+    state: started
+    enabled: true

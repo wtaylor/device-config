@@ -1,0 +1,6 @@
+- name: Install moby-engine
+  become: true
+  dnf:
+    state: latest
+    name:
+    - moby-engine

@@ -1,0 +1,4 @@
+formatter:
+  type: basic
+  indentless_arrays: true
+  eof_newline: true

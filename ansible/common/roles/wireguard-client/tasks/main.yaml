@@ -1,0 +1,15 @@
+- name: Include distribution specific tasks
+  include_tasks: "distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
+- name: generate wireguard configuration
+  become: true
+  template:
+    src: wg0.conf.j2
+    dest: /etc/wireguard/wg0.conf
+  register: wg0_config_gen
+- name: start/reload wireguard interface
+  become: true
+  when: autostart
+  systemd:
+    name: wg-quick@wg0
+    enabled: true
+    state: "{{ 'restarted' if wg0_config_gen.changed else 'started' }}"

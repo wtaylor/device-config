@@ -1,0 +1,11 @@
+[Unit]
+Description=Kopia Remote File Backup
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+ExecStart=kopia snapshot create /mnt/backup --force-enable-actions
+WorkingDirectory=/root/
+SyslogIdentifier=kopia-rfb

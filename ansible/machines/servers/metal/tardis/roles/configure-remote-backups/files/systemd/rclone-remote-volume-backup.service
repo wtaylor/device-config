@@ -1,0 +1,11 @@
+[Unit]
+Description=RClone Remote Volume Backup
+
+[Service]
+Type=simple
+User=root
+Group=root
+
+ExecStart=/root/rclone-remote-volume-backup.sh
+WorkingDirectory=/root/
+SyslogIdentifier=rclone-rvb

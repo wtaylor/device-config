@@ -1,0 +1,55 @@
+- name: Install rclone
+  ansible.builtin.shell: sudo -v ; curl https://rclone.org/install.sh | sudo bash
+  args:
+    creates: /usr/bin/rclone
+- name: Copy rclone script
+  become: true
+  copy:
+    src: rclone-remote-volume-backup.sh
+    dest: /root/rclone-remote-volume-backup.sh
+    owner: root
+    group: root
+    mode: 0750
+- name: Checkout snapback
+  become: true
+  ansible.builtin.git:
+    repo: https://github.com/wtaylor/proxmox-snapback.git
+    dest: /root/proxmox-lxc-zfs-snapback
+- name: Copy kopia action scripts
+  become: true
+  copy:
+    src: "{{ item }}"
+    dest: "/root/{{ item }}"
+    owner: root
+    group: root
+    mode: 0770
+  loop:
+  - kopia-file-backup-after-action.sh
+  - kopia-file-backup-before-action.sh
+- name: Copy service files
+  become: true
+  copy:
+    src: "systemd/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+  - rclone-remote-volume-backup.service
+  - rclone-remote-volume-backup.timer
+  - kopia-remote-file-backup.service
+  - kopia-remote-file-backup.timer
+- name: Enable backup timer
+  become: true
+  ansible.builtin.systemd_service:
+    name: rclone-remote-volume-backup.timer
+    daemon_reload: true
+    state: started
+    enabled: true
+- name: Enable file backup timer
+  become: true
+  ansible.builtin.systemd_service:
+    name: kopia-remote-file-backup.timer
+    daemon_reload: true
+    state: started
+    enabled: true

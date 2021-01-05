@@ -1,0 +1,14 @@
+- name: Download seaweed
+  unarchive:
+    src: https://github.com/seaweedfs/seaweedfs/releases/download/3.65/linux_amd64.tar.gz
+    remote_src: true
+    dest: /root/
+    creates: /root/weed
+- name: Install weed
+  copy:
+    src: /root/weed
+    dest: /usr/bin/weed
+    remote_src: true
+    owner: root
+    group: root
+    mode: '0755'

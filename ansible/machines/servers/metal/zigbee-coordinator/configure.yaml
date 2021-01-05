@@ -1,0 +1,8 @@
+- hosts: zigbee-coordinator
+  remote_user: root
+  roles:
+  - role: ./roles/zigbee-coordinator
+    vars:
+      mqtt_credentials:
+        username: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/zigbee2mqtt/mqtt-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+        password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/zigbee2mqtt/mqtt-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"

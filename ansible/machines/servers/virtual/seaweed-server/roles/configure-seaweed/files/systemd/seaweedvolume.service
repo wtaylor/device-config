@@ -1,0 +1,15 @@
+[Unit]
+Description=SeaweedFS Volume
+After=network.target
+
+[Service]
+Type=simple
+User=seaweedfs
+Group=seaweedfs
+
+ExecStart=/usr/bin/weed volume -dir=/mnt/ssd,/mnt/ssd-nobackup,/mnt/hdd,/mnt/hdd-nobackup,/mnt/nothdd -disk=ssd,ssdnobackup,hdd2,hdd2nobackup,hdd -dir.idx=/mnt/index -max=10000 -mserver="localhost:9333" -publicUrl="seaweed.willtaylor.info" -ip.bind=0.0.0.0
+WorkingDirectory=/home/seaweedfs
+SyslogIdentifier=seaweedfs-volume
+
+[Install]
+WantedBy=multi-user.target

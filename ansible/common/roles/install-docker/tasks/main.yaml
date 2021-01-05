@@ -1,0 +1,8 @@
+- name: Include distribution specific tasks
+  include_tasks: "distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
+- name: Add user to docker group
+  become: true
+  user:
+    name: "{{ ansible_user_id }}"
+    groups: docker
+    append: true

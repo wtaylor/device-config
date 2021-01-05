@@ -1,0 +1,6 @@
+- hosts: grafana-server.willtaylor.info
+  remote_user: root
+  roles:
+  - role: ../../../../common/roles/update-system
+  - role: ./roles/install-grafana
+  - role: ./roles/configure-grafana

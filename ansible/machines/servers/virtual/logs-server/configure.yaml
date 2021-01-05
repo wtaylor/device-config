@@ -1,0 +1,8 @@
+- hosts: logs-server.willtaylor.info
+  remote_user: root
+  roles:
+  - role: ./roles/configure-victoria-logs
+    victorialogs_version: "v1.0.0"
+    victorialogs_data_dir: "/mnt/victoria-logs/data"
+    victorialogs_retention_period: "1"
+    victorialogs_retention_max_disk_space_usage_bytes: "100GiB"

@@ -1,0 +1,26 @@
+- name: Bind gpu to vfio-pci at boot
+  become: true
+  copy:
+    content: options vfio-pci ids=10de:2203,10de:1aef
+    dest: /etc/modprobe.d/vfio.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: bind_vfio
+- name: Blacklist gpu drivers
+  become: true
+  copy:
+    content: |
+      blacklist radeon
+      blacklist nouveau
+      blacklist nvidia
+    dest: /etc/modprobe.d/blacklist.conf
+    owner: root
+    group: root
+    mode: '0644'
+  register: blacklist_gpu_drivers
+- name: Reboot to apply changes
+  become: true
+  when: bind_vfio.changed or blacklist_gpu_drivers.changed
+  reboot:
+    reboot_timeout: 600

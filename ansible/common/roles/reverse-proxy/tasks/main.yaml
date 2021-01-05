@@ -1,0 +1,23 @@
+- name: Include distribution specific tasks
+  include_tasks: "distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
+- name: Get cloudflare_token
+  ansible.builtin.set_fact:
+    cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
+- name: Write Caddyfile
+  become: true
+  template:
+    src: Caddyfile.j2
+    dest: /etc/caddy/Caddyfile
+    owner: root
+    group: root
+    mode: '0644'
+  vars:
+    cf_api_token: "{{ cloudflare_token }}"
+    hosts: "{{ proxy_hosts }}"
+  register: config
+- name: Start/Reload caddy
+  become: true
+  systemd:
+    name: caddy
+    enabled: true
+    state: "{{ 'reloaded' if config.changed else 'started' }}"

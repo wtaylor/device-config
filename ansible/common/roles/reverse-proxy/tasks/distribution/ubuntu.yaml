@@ -1,0 +1,47 @@
+- name: Install dependencies
+  apt:
+    state: present
+    name:
+    - debian-keyring
+    - debian-archive-keyring
+    - apt-transport-https
+- name: Add caddy gpg key
+  ansible.builtin.get_url:
+    url: https://dl.cloudsmith.io/public/caddy/stable/gpg.key
+    dest: /etc/apt/keyrings/caddy-stable-archive-keyring.asc
+    mode: '0644'
+- name: Add caddy deb repo
+  ansible.builtin.apt_repository:
+    filename: caddy-deb-repo
+    repo: 'deb [signed-by=/etc/apt/keyrings/caddy-stable-archive-keyring.asc] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main'
+- name: Add caddy deb-src repo
+  ansible.builtin.apt_repository:
+    filename: caddy-deb-src-repo
+    repo: 'deb-src [signed-by=/etc/apt/keyrings/caddy-stable-archive-keyring.asc] https://dl.cloudsmith.io/public/caddy/stable/deb/debian any-version main'
+- name: Install default caddy
+  apt:
+    name: caddy
+- name: Divert and caddy to caddy.default
+  community.general.dpkg_divert:
+    path: /usr/bin/caddy
+    divert: /usr/bin/caddy.default
+    rename: true
+- name: Download caddy.cloudflare
+  get_url:
+    url: 'https://caddyserver.com/api/download?os=linux&arch=amd64&p=github.com%2Fcaddy-dns%2Fcloudflare&idempotency=74637443899945'
+    dest: /usr/bin/caddy.cloudflare
+    mode: '0755'
+- name: Install alternative default caddy
+  community.general.alternatives:
+    name: caddy
+    path: /usr/bin/caddy.default
+    link: /usr/bin/caddy
+    priority: 10
+    state: present
+- name: Install and select alternative cloudflare caddy
+  community.general.alternatives:
+    name: caddy
+    path: /usr/bin/caddy.cloudflare
+    link: /usr/bin/caddy
+    priority: 50
+    state: selected

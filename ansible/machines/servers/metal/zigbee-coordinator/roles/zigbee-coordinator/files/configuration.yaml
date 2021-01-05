@@ -1,0 +1,89 @@
+homeassistant: true
+permit_join: false
+mqtt:
+  base_topic: zigbee2mqtt
+  server: mqtt://nats.willtaylor.info
+  user: '!secrets.yaml user'
+  password: '!secrets.yaml password'
+serial:
+  port: /dev/ttyACM0
+frontend:
+  port: 8080
+  host: 0.0.0.0
+advanced:
+  pan_id: 53194
+  network_key:
+  - 16
+  - 68
+  - 251
+  - 100
+  - 149
+  - 237
+  - 155
+  - 120
+  - 213
+  - 144
+  - 242
+  - 146
+  - 133
+  - 138
+  - 176
+  - 36
+  channel: 15
+  last_seen: ISO_8601
+  log_output:
+  - console
+  log_rotation: false
+devices:
+  '0x9035eafffef03801':
+    friendly_name: 'lights_spot_dimmable_living_room'
+  '0x14b457fffe4a106c':
+    friendly_name: 'socket_bike_charger_will'
+  '0x14b457fffe4af5bb':
+    friendly_name: 'socket_bike_charger_marta'
+  '0x001e5e09027a50b3':
+    friendly_name: 'heating_receiver_downstairs'
+  '0x001e5e090278b599':
+    friendly_name: 'heating_controller_upstairs'
+  '0x30fb10fffe20a475':
+    friendly_name: 'lights_wardrobe_walkin_zone_1'
+  '0x00124b0024c14192':
+    friendly_name: 'lights_pendant_walkin'
+  '0x9035eafffef3fa1c':
+    friendly_name: 'lights_wall_master_bedroom'
+  '0x9035eafffef3f4d1':
+    friendly_name: 'lights_pendant_master_bedroom'
+  '0x04cd15fffe7ee70a':
+    friendly_name: 'lights_wardrobe_walkin_zone_2'
+  '0x00124b0024c1e852':
+    friendly_name: 'lights_pendant_spare_bedroom'
+  '0x9035eafffef044c4':
+    friendly_name: 'lights_spot_dimmable_office'
+  '0x00124b0024c5bc1d':
+    friendly_name: 'lights_pendant_loft'
+  '0x00124b0024c024b0':
+    friendly_name: 'lights_pendant_wall_landing'
+  '0x9035eafffef030e8':
+    friendly_name: 'lights_spot_ensuite'
+  '0x00124b0024c0234c':
+    friendly_name: 'lights_spot_kitchen'
+  '0x00124b0024c1eb38':
+    friendly_name: 'lights_pendant_dining'
+  '0x00124b0024c142c3':
+    friendly_name: 'lights_spot_wc'
+  '0x00124b0024c07712':
+    friendly_name: 'lights_spot_kitchen_counter'
+  '0x00124b0024c20a4d':
+    friendly_name: 'lights_spot_utility_room'
+  '0x00124b0024c13d10':
+    friendly_name: 'lights_spot_hallway'
+  '0x00124b0024c5b118':
+    friendly_name: 'lights_spot_utility_closet'
+  '0x00124b0024c5b549':
+    friendly_name: 'lights_pendant_garage'
+  '0xa4c138d74b687b73':
+    friendly_name: 'sprinkler_zone_conifers'
+  '0x001e5e090278b832':
+    friendly_name: 'heating_controller_downstairs'
+  '0x001e5e09027a4db8':
+    friendly_name: 'heating_receiver_upstairs'

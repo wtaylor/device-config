@@ -1,0 +1,22 @@
+victorialogs_version: "v1.0.0"
+victorialogs_platform: "-linux"
+victorialogs_repo_url: "https://github.com/VictoriaMetrics/VictoriaMetrics"
+victorialogs_download_url: "{{ victorialogs_repo_url }}/releases/download/{{ victorialogs_version }}-victorialogs/victoria-logs{{ victorialogs_platform }}-{{ go_arch }}-{{ victorialogs_version }}-victorialogs.tar.gz"
+victorialogs_cli_download_url: "{{ victorialogs_repo_url }}/releases/download/{{ victorialogs_version }}-victorialogs/vlogscli{{ victorialogs_platform }}-{{ go_arch }}-{{ victorialogs_version }}-victorialogs.tar.gz"
+victorialogs_system_user: "victorialogs"
+victorialogs_system_group: "{{ victorialogs_system_user }}"
+victorialogs_data_dir: "/var/lib/victoria-logs/"
+victorialogs_retention_period: "12"
+victorialogs_retention_max_disk_space_usage_bytes: "1TiB"
+# more on envflags usage
+# https://docs.victorialogs.com/Single-server-victorialogs.html#environment-variables
+victorialogs_service_envflag_enabled: "false"
+# Array of strings to pass
+victorialogs_service_envflag_data: []
+#  - "graphiteListenAddr=127.0.0.1:12345"
+victorialogs_service_envflag_file: "/etc/default/victorialogs"
+victorialogs_service_args:
+  storageDataPath: "{{ victorialogs_data_dir }}"
+  retentionPeriod: "{{ victorialogs_retention_period }}"
+  "retention.maxDiskSpaceUsageBytes": "{{ victorialogs_retention_max_disk_space_usage_bytes }}"
+victorialogs_max_open_files: 2097152

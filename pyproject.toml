@@ -1,0 +1,17 @@
+[tool.poetry]
+name = "device-config"
+version = "0.1.0"
+description = ""
+authors = ["William Taylor <me@willtaylor.info>"]
+readme = "README.md"
+package-mode = false
+
+[tool.poetry.dependencies]
+python = "^3.13"
+hvac = "^2.3.0"
+ansible = "^10.6.0"
+
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"

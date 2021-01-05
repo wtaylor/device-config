@@ -1,0 +1,10 @@
+- name: Configure zfs modprobe options
+  become: true
+  copy:
+    dest: /etc/modprobe.d/zfs.conf
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      options zfs zfs_arc_max=10737418240
+  notify: Reboot System

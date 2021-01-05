@@ -1,0 +1,114 @@
+- name: Ensure seaweedfs config directories exist
+  file:
+    state: directory
+    path: "{{ item }}"
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0750'
+  loop:
+  - /etc/seaweedfs
+  - /etc/seaweedfs/certificates
+  - /etc/seaweedfs/certificates/ca
+  - /etc/seaweedfs/certificates/master
+  - /etc/seaweedfs/certificates/filer
+  - /etc/seaweedfs/certificates/volume
+  - /etc/seaweedfs/certificates/s3
+  - /etc/seaweedfs/certificates/client
+- name: Get seaweed related keys from vault
+  ansible.builtin.set_fact:
+    jwt_signing_keys: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/seaweedfs/jwt-signing-keys', url=vault_address, engine_mount_point=vault_secret_mount)).secret }}"
+    b2_backup_account_id: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/seaweedfs/b2-replication-keys', url=vault_address, engine_mount_point=vault_secret_mount)).secret.account_id }}"
+    b2_backup_secret_key: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/seaweedfs/b2-replication-keys', url=vault_address, engine_mount_point=vault_secret_mount)).secret.secret_key }}"
+- name: Generate security configuration
+  template:
+    src: security.toml.j2
+    dest: /etc/seaweedfs/security.toml
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0640'
+- name: Copy filer configuration
+  copy:
+    src: config/filer.toml
+    dest: /etc/seaweedfs/filer.toml
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0640'
+  register: filer_config
+- name: Generate filer.backup configuration
+  template:
+    src: replication.toml.j2
+    dest: /etc/seaweedfs/replication.toml
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0640'
+- name: Copy service files
+  copy:
+    src: "systemd/{{ item }}"
+    dest: "/etc/systemd/system/{{ item }}"
+    owner: root
+    group: root
+    mode: '0644'
+  loop:
+  - seaweedmaster.service
+  - seaweedvolume.service
+  - seaweedfiler.service
+  - seaweedfilerbackup.service
+  - seaweeds3gateway.service
+- name: Daemon reload systemd
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: Get and copy mtls CA public certificate
+  copy:
+    dest: /etc/seaweedfs/certificates/ca/ca.cert
+    content: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/common/int_ca', url=vault_address, engine_mount_point=vault_secret_mount)).secret.certificate }}"
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0640'
+- name: Get and copy mtls public certificates
+  copy:
+    dest: "/etc/seaweedfs/certificates/{{ item.service }}/mtls.cert"
+    content: "{{ (lookup('community.hashi_vault.vault_kv2_get', item.secret_path, url=vault_address, engine_mount_point=vault_secret_mount)).secret.certificate }}"
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0640'
+  loop:
+  - service: master
+    secret_path: system/seaweedfs/master-mtls-credentials
+  - service: volume
+    secret_path: system/seaweedfs/volume-mtls-credentials
+  - service: filer
+    secret_path: system/seaweedfs/filer-mtls-credentials
+  - service: s3
+    secret_path: system/seaweedfs/s3-mtls-credentials
+  - service: client
+    secret_path: system/seaweedfs/client-mtls-credentials
+- name: Get and copy mtls private keys
+  copy:
+    dest: "/etc/seaweedfs/certificates/{{ item.service }}/mtls.key"
+    content: "{{ (lookup('community.hashi_vault.vault_kv2_get', item.secret_path, url=vault_address, engine_mount_point=vault_secret_mount)).secret.private_key }}"
+    owner: seaweedfs
+    group: seaweedfs
+    mode: '0640'
+  loop:
+  - service: master
+    secret_path: system/seaweedfs/master-mtls-credentials
+  - service: volume
+    secret_path: system/seaweedfs/volume-mtls-credentials
+  - service: filer
+    secret_path: system/seaweedfs/filer-mtls-credentials
+  - service: s3
+    secret_path: system/seaweedfs/s3-mtls-credentials
+  - service: client
+    secret_path: system/seaweedfs/client-mtls-credentials
+- name: Start and enable all seaweed services
+  systemd:
+    daemon_reload: true
+    name: "{{ item }}"
+    state: restarted
+    enabled: true
+  loop:
+  - seaweedmaster.service
+  - seaweedvolume.service
+  - seaweedfiler.service
+  - seaweedfilerbackup.service
+  - seaweeds3gateway.service

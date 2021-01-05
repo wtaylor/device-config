@@ -1,0 +1,19 @@
+- name: Install dependencies
+  apt:
+    state: present
+    name:
+    - debian-keyring
+    - debian-archive-keyring
+    - apt-transport-https
+- name: Add hashicorp gpg key
+  ansible.builtin.get_url:
+    url: https://apt.releases.hashicorp.com/gpg
+    dest: /etc/apt/keyrings/hashicorp-archive-keyring.asc
+    mode: '0644'
+- name: Add hashicorp repo
+  ansible.builtin.apt_repository:
+    filename: hashicorp-deb-repo
+    repo: 'deb [signed-by=/etc/apt/keyrings/hashicorp-archive-keyring.asc] https://apt.releases.hashicorp.com {{ ansible_distribution_release }} main'
+- name: Install vault
+  apt:
+    name: vault

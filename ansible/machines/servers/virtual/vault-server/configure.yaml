@@ -1,0 +1,5 @@
+- hosts: vault-server.willtaylor.info
+  remote_user: root
+  roles:
+  - role: ../../../common/roles/update-system
+  - role: ./roles/hashicorp-vault

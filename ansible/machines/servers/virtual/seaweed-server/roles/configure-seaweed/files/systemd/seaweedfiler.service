@@ -1,0 +1,15 @@
+[Unit]
+Description=SeaweedFS Volume
+After=network.target
+
+[Service]
+Type=simple
+User=seaweedfs
+Group=seaweedfs
+
+ExecStart=/usr/bin/weed filer -ip.bind=0.0.0.0
+WorkingDirectory=/home/seaweedfs
+SyslogIdentifier=seaweedfs-filer
+
+[Install]
+WantedBy=multi-user.target

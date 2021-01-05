@@ -1,0 +1,7 @@
+- hosts: metrics-server.willtaylor.info
+  remote_user: root
+  roles:
+  - role: ./roles/configure-victoria-metrics
+    victoriametrics_version: "v1.106.1"
+    victoriametrics_data_dir: "/mnt/victoria-metrics/data"
+    victoriametrics_retention_period_months: "1"

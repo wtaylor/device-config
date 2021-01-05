@@ -1,0 +1,108 @@
+- name: Create victorialogs system group
+  ansible.builtin.group:
+    name: "{{ victorialogs_system_group }}"
+    state: present
+    system: true
+  when: victorialogs_system_group != "root"
+- name: Create victorialogs system user
+  ansible.builtin.user:
+    name: "{{ victorialogs_system_user }}"
+    groups: "{{ victorialogs_system_group }}"
+    append: true
+    shell: /usr/sbin/nologin
+    system: true
+    createhome: false
+  when: victorialogs_system_user != "root"
+- name: Ensure existence of /usr/local/bin
+  ansible.builtin.file:
+    path: /usr/local/bin
+    state: directory
+    mode: '0755'
+- name: Ensure existence of victorialogs storage directory
+  ansible.builtin.file:
+    path: "{{ victorialogs_data_dir }}"
+    state: directory
+    mode: '0755'
+    owner: "{{ victorialogs_system_user }}"
+    group: "{{ victorialogs_system_group }}"
+- name: Delete existing victorialogs version if it is different.
+  ansible.builtin.file:
+    path: /usr/local/bin/victoria-logs-prod
+    state: absent
+  when:
+  - victorialogs_is_installed.stat.exists | bool
+  - victorialogs_version not in victorialogs_current_version.stdout
+- name: Download and setup binaries
+  block:
+  - name: Prepare local download paths
+    delegate_to: localhost
+    become: false
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: directory
+      mode: '0755'
+    loop:
+    - /tmp/vic-logs/
+    - /tmp/vic-logs-cli/
+    when:
+    - not ansible_check_mode
+    - not victorialogs_is_installed.stat.exists or victorialogs_version not in victorialogs_current_version.stdout
+  - name: Download and unarchive victorialogs release binary
+    environment:
+      http_proxy: ''
+      https_proxy: ''
+    ansible.builtin.unarchive:
+      src: "{{ victorialogs_download_url }}"
+      dest: /tmp/vic-logs/
+      remote_src: true
+      extra_opts:
+      - --no-same-owner
+    notify: Restart VictoriaLogs service
+    register: archive_downloaded
+    become: false
+    delegate_to: localhost
+    when:
+    - not ansible_check_mode
+    - not victorialogs_is_installed.stat.exists or victorialogs_version not in victorialogs_current_version.stdout
+  - name: Upload victorialogs release binary # noqa: no-handler
+    ansible.builtin.copy:
+      src: /tmp/vic-logs/victoria-logs-prod
+      dest: /usr/local/bin
+      mode: '0751'
+      owner: "{{ victorialogs_system_user }}"
+      group: "{{ victorialogs_system_group }}"
+    when:
+    - archive_downloaded is changed
+  - name: Download victorialogs cli # noqa: no-handler
+    become: false
+    environment:
+      http_proxy: ''
+      https_proxy: ''
+    ansible.builtin.unarchive:
+      src: "{{ victorialogs_cli_download_url }}"
+      dest: /tmp/vic-logs-cli/
+      remote_src: true
+    delegate_to: localhost
+    when:
+    - archive_downloaded is changed
+  - name: Upload victorialogs release binaries # noqa: no-handler
+    ansible.builtin.copy:
+      src: "/tmp/vic-logs-cli/vlogscli-prod"
+      dest: /usr/local/bin
+      mode: '0751'
+      owner: "{{ victorialogs_system_user }}"
+      group: "{{ victorialogs_system_group }}"
+    when:
+    - archive_downloaded is changed
+  always:
+  - name: Clear download paths
+    delegate_to: localhost
+    become: false
+    ansible.builtin.file:
+      path: "{{ item }}"
+      state: absent
+    loop:
+    - /tmp/vic-logs/
+    - /tmp/vic-logs-cli/
+    when:
+    - not ansible_check_mode

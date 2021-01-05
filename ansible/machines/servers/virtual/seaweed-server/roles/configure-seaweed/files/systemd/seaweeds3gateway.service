@@ -1,0 +1,15 @@
+[Unit]
+Description=SeaweedFS Volume
+After=network.target
+
+[Service]
+Type=simple
+User=seaweedfs
+Group=seaweedfs
+
+ExecStart=/usr/bin/weed s3 -allowEmptyFolder=false -domainName=s3.willtaylor.info -ip.bind=0.0.0.0
+WorkingDirectory=/home/seaweedfs
+SyslogIdentifier=seaweedfs-s3
+
+[Install]
+WantedBy=multi-user.target

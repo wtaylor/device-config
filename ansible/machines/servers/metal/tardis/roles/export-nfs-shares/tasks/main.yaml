@@ -1,0 +1,71 @@
+- name: Ensure /srv exists
+  become: true
+  file:
+    path: /srv
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+- name: Ensure /srv/nfs4 exists
+  become: true
+  file:
+    path: /srv/nfs4
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+- name: Ensure /srv/nfs4/media exists
+  become: true
+  file:
+    path: /srv/nfs4/media
+    state: directory
+- name: Ensure /srv/nfs4/servicebackup exists
+  become: true
+  file:
+    path: /srv/nfs4/servicebackup
+    state: directory
+- name: Bind mount /mnt/storage/media to /srv/nsf4/media via fstab
+  become: true
+  lineinfile:
+    path: /etc/fstab
+    line: /mnt/storage/media /srv/nfs4/media none bind,defaults,nofail,x-systemd.requires=zfs-mount.service 0 0
+  register: media_bind_mount
+- name: Bind mount /mnt/storage/services/backup to /srv/nsf4/servicebackup via fstab
+  become: true
+  lineinfile:
+    path: /etc/fstab
+    line: /mnt/storage/services/backup /srv/nfs4/servicebackup none bind,defaults,nofail,x-systemd.requires=zfs-mount.service 0 0
+  register: servicebackup_bind_mount
+- name: Reboot to apply fstab changes
+  become: true
+  when: media_bind_mount.changed or servicebackup_bind_mount.changed
+  reboot:
+    reboot_timeout: 600
+- name: Install nfs-kernel-server
+  become: true
+  apt:
+    state: present
+    name:
+    - nfs-kernel-server
+- name: Export /srv/nfs4 as NFSv4 root
+  become: true
+  lineinfile:
+    path: /etc/exports
+    line: /srv/nfs4               192.168.0.0/16(rw,sync,fsid=0,crossmnt,no_subtree_check)
+  register: export_nfsv4_root
+- name: Export /srv/nfs4 as NFSv4 root
+  become: true
+  lineinfile:
+    path: /etc/exports
+    line: /srv/nfs4/media         192.168.0.0/16(rw,sync,no_subtree_check)
+  register: export_media
+- name: Export /srv/nfs4 as NFSv4 root
+  become: true
+  lineinfile:
+    path: /etc/exports
+    line: /srv/nfs4/servicebackup 192.168.0.0/16(rw,sync,no_subtree_check)
+  register: export_servicebackup
+- name: Reload NFS exports
+  become: true
+  when: export_nfsv4_root.changed or export_media.changed or export_servicebackup.changed
+  command: exportfs -ra

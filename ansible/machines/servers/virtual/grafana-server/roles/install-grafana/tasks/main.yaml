@@ -1,0 +1,16 @@
+- name: Install Dependencies
+  ansible.builtin.apt:
+    state: present
+    name: python3-debian
+- name: Add Grafana APT Repository
+  ansible.builtin.deb822_repository:
+    name: grafana
+    types: deb
+    uris: https://apt.grafana.com
+    suites: stable
+    components: main
+    signed_by: https://apt.grafana.com/gpg.key
+- name: Install Grafana
+  apt:
+    update_cache: true
+    name: grafana

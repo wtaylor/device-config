@@ -1,0 +1,16 @@
+# A sample TOML config file for replicating SeaweedFS filer
+# Used with "weed filer.backup"
+# Using with "weed filer.replicate" is deprecated.
+# Put this file to one of the location, with descending priority
+#    ./replication.toml
+#    $HOME/.seaweedfs/replication.toml
+#    /etc/seaweedfs/replication.toml
+
+[sink.backblaze]
+enabled = true
+b2_account_id = "{{ b2_backup_account_id }}"
+b2_master_application_key = "{{ b2_backup_secret_key }}"
+b2_region = "eu-central"
+bucket = "t2ym2kimito44krcgavkkxok"
+directory = "/seaweed-replication/"
+is_incremental = false

@@ -1,0 +1,8 @@
+- name: Update Grub
+  become: true
+  command: update-grub
+  notify: Reboot System
+- name: Reboot System
+  become: true
+  reboot:
+    reboot_timeout: 600

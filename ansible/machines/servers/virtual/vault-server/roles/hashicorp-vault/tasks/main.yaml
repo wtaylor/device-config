@@ -1,0 +1,41 @@
+- name: Include distribution specific tasks
+  include_tasks: "distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
+- name: Ensure vault owns data directory
+  become: true
+  file:
+    state: directory
+    path: /mnt/vault-data
+    owner: vault
+    group: vault
+    mode: '0770'
+- name: Copy vault configuration
+  become: true
+  copy:
+    src: vault.hcl
+    dest: /etc/vault.d/vault.hcl
+    owner: vault
+    group: vault
+    mode: '0644'
+  register: config
+- name: Ensure /opt/vault exists
+  become: true
+  file:
+    state: directory
+    path: /opt/vault
+    owner: vault
+    group: vault
+    mode: '0770'
+- name: Ensure /opt/vault/tls exists
+  become: true
+  file:
+    state: directory
+    path: /opt/vault/tls
+    owner: vault
+    group: vault
+    mode: '0770'
+- name: Start and enable hashicorp vault
+  become: true
+  systemd:
+    name: vault
+    state: "{{ 'reloaded' if config.changed else 'started' }}"
+    enabled: true

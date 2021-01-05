@@ -1,0 +1,11 @@
+{% for host in hosts %}
+
+https://{{ host.domain }} {
+    tls {
+        dns cloudflare {{ cf_api_token }}
+        resolvers 1.1.1.1
+    }
+    reverse_proxy {{ host.dest }}
+}
+
+{% endfor %}
