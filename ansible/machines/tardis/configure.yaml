@@ -2,7 +2,7 @@
   remote_user: wtaylor
   roles:
   - role: ./roles/proxmox-configure-nonprod-sources
-  - role: ../../../../common/roles/update-system
+  - role: ../../common/roles/update-system
   - role: ./roles/enable-vfio
   - role: ./roles/reserve-gpu
   - role: ./roles/upload-gpu-rom

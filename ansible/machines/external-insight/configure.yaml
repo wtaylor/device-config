@@ -1,9 +1,9 @@
 - hosts: external-insight
   remote_user: root
   roles:
-  - role: ../../../../common/roles/update-system
-  - role: ../../../../common/roles/install-docker
-  - role: ../../../../common/roles/wireguard-client
+  - role: ../../common/roles/update-system
+  - role: ../../common/roles/install-docker
+  - role: ../../common/roles/wireguard-client
     vars:
       autostart: true
       interface:
@@ -15,13 +15,13 @@
         allowedIps: "192.168.0.0/16,172.28.0.0/16"
         endpoint: wireguard.willtaylor.info:51820
   - role: roles/uptime-kuma
-  - role: ../../../../common/roles/servers/reverse-proxy
+  - role: ../../common/roles/servers/reverse-proxy
     vars:
       cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
       proxy_hosts:
       - domain: status.willtaylor.info
         dest: http://localhost:3001
-  - role: ../../../../common/roles/servers/vector-agent
+  - role: ../../common/roles/servers/vector-agent
     vars:
       tls:
         ca_pem: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/vector/external-insight/tls-certificate', url=vault_address, engine_mount_point=vault_secret_mount)).secret.caChain }}"

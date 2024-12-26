@@ -1,7 +1,7 @@
 - hosts: vector-server.willtaylor.info
   remote_user: root
   roles:
-  - role: ../../../../common/roles/servers/certificates
+  - role: ../../common/roles/certificates
     contact_mail: me@willtaylor.info
     cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
     domains:

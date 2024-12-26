@@ -1,8 +1,8 @@
 - hosts: nas-rp-server.willtaylor.info
   remote_user: root
   roles:
-  - role: ../../../../common/roles/update-system
-  - role: ../../../../common/roles/servers/reverse-proxy
+  - role: ../../common/roles/update-system
+  - role: ../../common/roles/servers/reverse-proxy
     proxy_hosts:
     - domain: vault.willtaylor.info
       dest: http://vault-server.willtaylor.info:8200

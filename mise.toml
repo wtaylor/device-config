@@ -1,0 +1,15 @@
+[tools]
+python = { version = "3.13.1", virtualenv = ".venv" }
+uv = "0.5.11"
+
+[settings]
+experimental = true
+
+[settings.python]
+uv_venv_auto = true
+
+[env]
+_.python.venv = { path = ".venv", create = true }
+
+[tasks.ansible_playbook]
+run = 'ansible-playbook -i ansible/common/inventory/ ansible/machines/{{arg(name="machine_playbook")}}'
