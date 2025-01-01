@@ -22,9 +22,7 @@ schema:
 sources:
   vector_internal_metrics:
     type: internal_metrics
-  vector_internal_logs:
-    type: internal_logs
-  vector_upstream:
+  vector_upstream_kubernetes_agents:
     type: vector
     address: 0.0.0.0:6000
     version: "2"
@@ -33,10 +31,6 @@ sources:
   prometheus_remote_write:
     type: prometheus_remote_write
     address: 0.0.0.0:9090
-  syslog:
-    type: syslog
-    address: 0.0.0.0:1468
-    mode: tcp
   talos_kernel_logs:
     address: 0.0.0.0:6050
     type: socket
@@ -53,61 +47,40 @@ sources:
     decoding:
       codec: json
     host_key: __host
-    # prometheus_scrape:
-    #   type: prometheus_scrape
-    #   endpoints:
-    #   - https://opnsense.willtaylor.info:9100/metrics
-    #   scrape_interval_secs: 15
-    #   instance_tag: instance
-    #   endpoint_tag: endpoint
-transforms:
-  vl_vector_internal_logs:
-    type: remap
-    inputs: [vector_internal_logs]
-    source: |-
-      .service = "vector"
-      .host = get_hostname!()
-
-      %vl.msg_field = "message"
-      %vl.time_field = "timestamp"
-      %vl.stream_fields = "host,service"
-  vl_talos_kernel_logs:
-    type: remap
-    inputs: [talos_kernel_logs]
-    source: |-
-      %vl.msg_field = "msg"
-      %vl.time_field = "talos-time"
-      %vl.stream_fields = "facility"
-  vl_talos_service_logs:
-    type: remap
-    inputs: [talos_service_logs]
-    source: |-
-      %vl.msg_field = "msg"
-      %vl.time_field = "talos-time"
-      %vl.stream_fields = "talos-service"
+# transforms:
 sinks:
-  generic_metrics:
+  generic_metrics_sink: &vm_metrics_sink_defaults
     type: prometheus_remote_write
     inputs:
     - vector_internal_metrics
-    - vector_upstream
-    # - prometheus_scrape
+    - vector_upstream_kubernetes_agents
     - prometheus_remote_write
     endpoint: http://metrics-server.willtaylor.info:8428/api/v1/write
     healthcheck:
       enabled: false
-  generic_logs:
+  kubernetes_logs_sink: &vl_logs_sink_defaults
     type: elasticsearch
-    inputs:
-    - vl_vector_internal_logs
-    - vl_talos_kernel_logs
-    - vl_talos_service_logs
+    inputs: [vector_upstream_kubernetes_agents]
     endpoints: ['http://logs-server.willtaylor.info:9428/insert/elasticsearch']
     mode: bulk
     api_version: v8
     healthcheck:
       enabled: false
     query:
-      _msg_field: "{{ %vl.msg_field }}"
-      _time_field: "{{ %vl.time_field }}"
-      _stream_fields: "{{ %vl.stream_fields }}"
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: host,service,kubernetes_pod_name,kubernetes_container_name
+  talos_kernel_logs_sink:
+    <<: *vl_logs_sink_defaults
+    inputs: [talos_kernel_logs]
+    query:
+      _msg_field: msg
+      _time_field: talos-time
+      _stream_fields: facility
+  talos_service_logs_sink:
+    <<: *vl_logs_sink_defaults
+    inputs: [talos_service_logs]
+    query:
+      _msg_field: msg
+      _time_field: talos-time
+      _stream_fields: talos-service
