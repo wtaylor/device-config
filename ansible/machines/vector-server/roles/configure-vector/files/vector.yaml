@@ -22,12 +22,15 @@ schema:
 sources:
   vector_internal_metrics:
     type: internal_metrics
-  vector_upstream_kubernetes_agents:
+  vector_upstream_kubernetes_agents: &vector_source_defaults
     type: vector
     address: 0.0.0.0:6000
     version: "2"
     tls:
       enabled: false
+  vector_lxc_agents:
+    <<: *vector_source_defaults
+    address: 0.0.0.0:6001
   prometheus_remote_write:
     type: prometheus_remote_write
     address: 0.0.0.0:9090
@@ -84,3 +87,10 @@ sinks:
       _msg_field: msg
       _time_field: talos-time
       _stream_fields: talos-service
+  lxc_logs_sink:
+    <<: *vl_logs_sink_defaults
+    inputs: [vector_lxc_agents]
+    query:
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: host,lxc_host,service

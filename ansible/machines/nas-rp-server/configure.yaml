@@ -2,7 +2,7 @@
   remote_user: root
   roles:
   - role: ../../common/roles/update-system
-  - role: ../../common/roles/servers/reverse-proxy
+  - role: ../../common/roles/reverse-proxy
     proxy_hosts:
     - domain: vault.willtaylor.info
       dest: http://vault-server.willtaylor.info:8200
@@ -12,3 +12,39 @@
       dest: http://seaweed-server.willtaylor.info:8333
     - domain: grafana.tk831.net
       dest: http://grafana-server.willtaylor.info:3000
+  - role: ../../common/roles/vector-agent
+    vars:
+      vector_config:
+        data_dir: /opt/vector/data
+        schema:
+          log_namespace: true
+        sources:
+          vector_logs:
+            type: internal_logs
+          journald:
+            type: journald
+            include_units:
+            - caddy.service
+        transforms:
+          mapped_journal_logs:
+            type: remap
+            inputs: [journald]
+            source: |-
+              .message = .
+              .timestamp = %journald.timestamp
+              .lxc_host = %journald.host
+              .host = "tardis"
+              .service = %journald._SYSTEMD_UNIT
+        sinks:
+          console:
+            type: console
+            inputs: ["vector_logs"]
+            encoding:
+              codec: text
+          vector_server:
+            type: vector
+            inputs: ["mapped_journal_logs"]
+            address: http://vector-server.willtaylor.info:6001
+            version: "2"
+            tls:
+              enabled: false

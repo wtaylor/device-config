@@ -1,0 +1,16 @@
+- name: Install Dependencies
+  ansible.builtin.apt:
+    state: present
+    name: python3-debian
+- name: Add Vector APT Repository
+  ansible.builtin.deb822_repository:
+    name: vector
+    types: deb
+    uris: https://apt.vector.dev
+    suites: stable
+    components: vector-0
+    signed_by: https://keys.datadoghq.com/DATADOG_APT_KEY_CURRENT.public
+- name: Install Vector
+  apt:
+    update_cache: true
+    name: vector
