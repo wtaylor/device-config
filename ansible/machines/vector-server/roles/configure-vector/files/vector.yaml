@@ -22,6 +22,10 @@ schema:
 sources:
   vector_internal_metrics:
     type: internal_metrics
+  vector_internal_logs:
+    type: journald
+    include_units:
+    - vector.service
   vector_upstream_kubernetes_agents: &vector_source_defaults
     type: vector
     address: 0.0.0.0:6000
@@ -50,7 +54,16 @@ sources:
     decoding:
       codec: json
     host_key: __host
-# transforms:
+transforms:
+  mapped_internal_journal_logs:
+    type: remap
+    inputs: [vector_internal_logs]
+    source: |-
+      .message = .
+      .timestamp = %journald.timestamp
+      .lxc_host = %journald.host
+      .host = "tardis"
+      .service = %journald.metadata._SYSTEMD_UNIT
 sinks:
   generic_metrics_sink: &vm_metrics_sink_defaults
     type: prometheus_remote_write
@@ -89,7 +102,7 @@ sinks:
       _stream_fields: talos-service
   lxc_logs_sink:
     <<: *vl_logs_sink_defaults
-    inputs: [vector_lxc_agents]
+    inputs: [vector_lxc_agents, mapped_internal_journal_logs]
     query:
       _msg_field: message
       _time_field: timestamp

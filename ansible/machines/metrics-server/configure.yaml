@@ -5,3 +5,41 @@
     victoriametrics_version: "v1.106.1"
     victoriametrics_data_dir: "/mnt/victoria-metrics/data"
     victoriametrics_retention_period_months: "1"
+  - role: ../../common/roles/vector-agent
+    vars:
+      vector_config:
+        data_dir: /opt/vector/data
+        api:
+          enabled: true
+        schema:
+          log_namespace: true
+        sources:
+          vector_logs:
+            type: internal_logs
+          journald:
+            type: journald
+            include_units:
+            - victoriametrics.service
+        transforms:
+          mapped_journal_logs:
+            type: remap
+            inputs: [journald]
+            source: |-
+              .message = .
+              .timestamp = %journald.timestamp
+              .lxc_host = %journald.host
+              .host = "tardis"
+              .service = %journald.metadata._SYSTEMD_UNIT
+        sinks:
+          console:
+            type: console
+            inputs: ["vector_logs"]
+            encoding:
+              codec: text
+          vector_server:
+            type: vector
+            inputs: ["mapped_journal_logs"]
+            address: http://vector-server.willtaylor.info:6001
+            version: "2"
+            tls:
+              enabled: false

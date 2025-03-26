@@ -8,6 +8,8 @@
     vars:
       vector_config:
         data_dir: /opt/vector/data
+        api:
+          enabled: true
         schema:
           log_namespace: true
         sources:
@@ -29,7 +31,7 @@
               .timestamp = %journald.timestamp
               .lxc_host = %journald.host
               .host = "tardis"
-              .service = %journald._SYSTEMD_UNIT
+              .service = %journald.metadata._SYSTEMD_UNIT
         sinks:
           console:
             type: console
