@@ -1,0 +1,23 @@
+- name: Configure kernel command line flags
+  become: true
+  notify: Reboot System
+  copy:
+    dest: /etc/kernel/cmdline
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      root=ZFS=rpool/ROOT/pve-1 boot=zfs quiet intel_iommu=on iommu=pt pcie_acs_override=downstream,multifunction initcall_blacklist=sysfb_init video=simplefb:off video=vesafb:off video=efifb:off video=vesa:off disable_vga=1 vfio_iommu_type1.allow_unsafe_interrupts=1 kvm.ignore_msrs=1 modprobe.blacklist=radeon,nouveau,nvidia,nvidiafb,nvidia-gpu,snd_hda_intel,snd_hda_codec_hdmi,i915
+- name: Configure kernel modules
+  become: true
+  notify: Reboot System
+  copy:
+    dest: /etc/modules
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      vfio
+      vfio_iommu_type1
+      vfio_pci
+      vfio_virqfd

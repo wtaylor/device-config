@@ -1,4 +1,7 @@
 - hosts: [red-one]
   remote_user: root
+  handlers:
+  - import_tasks: ../../common/handlers/global.yaml
   roles:
   - role: ../../common/roles/proxmox-configure-nonprod-sources
+  - role: ./roles/proxmox-enable-vfio
