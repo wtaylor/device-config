@@ -1,0 +1,4 @@
+- hosts: [red-one]
+  remote_user: root
+  roles:
+  - role: ../../common/roles/proxmox-configure-nonprod-sources

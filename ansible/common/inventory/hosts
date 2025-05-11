@@ -9,6 +9,7 @@ logs-server.willtaylor.info
 vector-server.willtaylor.info
 nas-rp-server.willtaylor.info
 external-insight ansible_host=64.227.65.173
+red-one ansible_host=172.28.2.2
 
 [all:vars]
 ansible_python_interpreter=auto_silent
