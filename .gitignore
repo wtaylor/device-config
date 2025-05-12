@@ -2,3 +2,4 @@
 terraform.tfstate.backup
 .venv/
 02-secrets.bashrc
+**/*.tfstate

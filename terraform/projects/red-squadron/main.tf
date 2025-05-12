@@ -40,10 +40,11 @@ data "talos_image_factory_urls" "red_squadron" {
   platform      = "nocloud"
 }
 
-resource "proxmox_virtual_environment_download_file" "talos_cloud_image" {
+resource "proxmox_virtual_environment_download_file" "talos_iso" {
   content_type = "iso"
   datastore_id = "local"
   node_name    = "red-one"
+  file_name    = "talos-nocloud-amd64.iso"
 
   url = data.talos_image_factory_urls.red_squadron.urls.iso
 }
