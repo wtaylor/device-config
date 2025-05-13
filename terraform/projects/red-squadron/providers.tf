@@ -9,6 +9,10 @@ terraform {
       source  = "siderolabs/talos"
       version = "0.8.0"
     }
+    time = {
+      source  = "hashicorp/time"
+      version = "0.13.1"
+    }
   }
   backend "s3" {
     endpoints = {
