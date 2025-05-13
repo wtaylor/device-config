@@ -11,17 +11,14 @@ data "talos_image_factory_extensions_versions" "red_squadron" {
   talos_version = local.talos_version
   filters = {
     names = [
-      "cloudflared",
       "gasket-driver",
       "i915",
       "intel-ice-firmware",
       "intel-ucode",
       "iscsi-tools",
       "mei",
-      "nut-client",
       "qemu-guest-agent",
       "thunderbolt",
-      "tailscale",
     ]
   }
 }
@@ -92,6 +89,8 @@ resource "proxmox_virtual_environment_vm" "red_one_talos" {
   machine       = "q35"
   scsi_hardware = "virtio-scsi-single"
 
+  boot_order = ["scsi0", "ide0", "net0"]
+
   agent {
     enabled = true
   }
@@ -156,12 +155,6 @@ resource "proxmox_virtual_environment_vm" "red_one_talos" {
   }
 }
 
-resource "time_sleep" "red_squadron_talos_one_init" {
-  depends_on = [proxmox_virtual_environment_vm.red_one_talos]
-
-  create_duration = "20s"
-}
-
 resource "talos_machine_secrets" "red_squadron_talos" {}
 
 data "talos_machine_configuration" "red_squadron_talos_one" {
@@ -172,7 +165,7 @@ data "talos_machine_configuration" "red_squadron_talos_one" {
 }
 
 resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
-  depends_on = [time_sleep.red_squadron_talos_one_init]
+  depends_on = [proxmox_virtual_environment_vm.red_one_talos]
 
   client_configuration        = talos_machine_secrets.red_squadron_talos.client_configuration
   machine_configuration_input = data.talos_machine_configuration.red_squadron_talos_one.machine_configuration
