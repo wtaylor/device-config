@@ -202,6 +202,16 @@ resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
             }]
           }]
         }
+        nodeLabels = {
+          "node.kubernetes.io/exclude-from-external-load-balancers" = {
+            "$patch" = "delete"
+          }
+        }
+        features = {
+          hostDNS = {
+            forwardKubeDNSToHost = false
+          }
+        }
         logging = {
           destinations = [{
             endpoint = "udp://vector-server.willtaylor.info:6051/"
@@ -224,16 +234,14 @@ resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
         }
         extraManifests = [
           "https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/refs/tags/v0.9.1/deploy/standalone-install.yaml",
-          "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/standard/gateway.networking.k8s.io_gatewayclasses.yaml",
-          "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/standard/gateway.networking.k8s.io_gateways.yaml",
-          "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/standard/gateway.networking.k8s.io_httproutes.yaml",
-          "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/standard/gateway.networking.k8s.io_referencegrants.yaml",
-          "https://raw.githubusercontent.com/kubernetes-sigs/gateway-api/v1.2.0/config/crd/standard/gateway.networking.k8s.io_grpcroutes.yaml",
+          "https://raw.githubusercontent.com/wtaylor/device-config/refs/heads/main/kubernetes/common/argocd-core/standalone.yaml"
         ]
-        inlineManifests = [{
-          name     = "cilium-install-job"
-          contents = file("${path.module}/files/cilium-install-job.yaml")
-        }]
+        inlineManifests = [
+          {
+            name     = "cilium-install-job"
+            contents = file("${path.module}/files/cilium-install-job.yaml")
+          }
+        ]
       }
     })
   ]
@@ -270,3 +278,43 @@ output "kubeconfig" {
   value     = talos_cluster_kubeconfig.red_squadron_talos.kubeconfig_raw
 }
 
+resource "time_sleep" "kubernetes_ready" {
+  depends_on = [
+    talos_machine_bootstrap.red_squadron_talos_one
+  ]
+  create_duration = "60s"
+}
+
+module "vault_auth" {
+  source = "../../modules/k8s-vault-auth"
+  depends_on = [
+    talos_machine_bootstrap.red_squadron_talos_one,
+    time_sleep.kubernetes_ready
+  ]
+
+  create_namespace                  = true
+  namespace                         = "external-secrets"
+  service_account_name              = "external-secrets"
+  service_account_token_secret_name = "external-secrets-vault-token"
+}
+
+resource "vault_auth_backend" "kubernetes" {
+  type = "kubernetes"
+}
+
+resource "vault_kubernetes_auth_backend_config" "red_squadron" {
+  backend                = vault_auth_backend.kubernetes.path
+  kubernetes_host        = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
+  kubernetes_ca_cert     = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.ca_certificate
+  token_reviewer_jwt     = module.vault_auth.service_account_token
+  disable_iss_validation = "true"
+}
+
+resource "vault_kubernetes_auth_backend_role" "red_squadron" {
+  backend                          = vault_auth_backend.kubernetes.path
+  role_name                        = "external-secrets-css"
+  bound_service_account_names      = ["external-secrets"]
+  bound_service_account_namespaces = ["external-secrets"]
+  token_ttl                        = 3600
+  token_policies                   = ["kubernetes-external-secrets"]
+}

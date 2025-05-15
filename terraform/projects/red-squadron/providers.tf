@@ -9,9 +9,17 @@ terraform {
       source  = "siderolabs/talos"
       version = "0.8.0"
     }
+    kubernetes = {
+      source  = "hashicorp/kubernetes"
+      version = "2.36.0"
+    }
     time = {
       source  = "hashicorp/time"
       version = "0.13.1"
+    }
+    vault = {
+      source  = "hashicorp/vault"
+      version = "4.8.0"
     }
   }
   backend "s3" {
@@ -31,8 +39,6 @@ terraform {
   }
 }
 
-provider "talos" {}
-
 provider "proxmox" {
   endpoint = "https://red-one.willtaylor.info:8006"
   insecure = true
@@ -40,5 +46,12 @@ provider "proxmox" {
   ssh {
     agent = true
   }
+}
+
+provider "kubernetes" {
+  host                   = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
+  cluster_ca_certificate = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.ca_certificate)
+  client_certificate     = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.client_certificate)
+  client_key             = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.client_key)
 }
 

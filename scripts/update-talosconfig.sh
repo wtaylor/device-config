@@ -24,3 +24,4 @@ export AWS_SECRET_ACCESS_KEY="$(vault kv get -mount=kv -field=applicationKey sys
 mkdir -p ~/.talos
 
 terraform output -raw talos_client_config >~/.talos/config
+talosctl kubeconfig
