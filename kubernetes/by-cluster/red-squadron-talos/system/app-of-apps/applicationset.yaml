@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: system-applications
+spec:
+  goTemplate: true
+  generators:
+  - git:
+      repoURL: https://github.com/wtaylor/device-config.git
+      revision: HEAD
+      directories:
+      - path: ./kubernetes/by-cluster/red-squadron-talos/system/applications/by-namespace/*/*
+  template:
+    metadata:
+      name: '{{.path.basename}}'
+    spec:
+      project: system
+      source:
+        repoURL: https://github.com/wtaylor/device-config.git
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{index .path.segments 4}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: false
+          allowEmpty: false
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true

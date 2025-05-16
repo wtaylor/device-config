@@ -203,6 +203,8 @@ resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
           }]
         }
         nodeLabels = {
+          "topology.kubernetes.io/region" = "red-squadron"
+          "topology.kubernetes.io/zone"   = "red-one"
           "node.kubernetes.io/exclude-from-external-load-balancers" = {
             "$patch" = "delete"
           }
@@ -307,14 +309,33 @@ resource "vault_kubernetes_auth_backend_config" "red_squadron" {
   kubernetes_host        = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
   kubernetes_ca_cert     = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.ca_certificate
   token_reviewer_jwt     = module.vault_auth.service_account_token
-  disable_iss_validation = "true"
+  disable_iss_validation = false
+  issuer                 = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
 }
 
 resource "vault_kubernetes_auth_backend_role" "red_squadron" {
   backend                          = vault_auth_backend.kubernetes.path
   role_name                        = "external-secrets-css"
-  bound_service_account_names      = ["external-secrets"]
+  bound_service_account_names      = ["eso-vault-css"]
   bound_service_account_namespaces = ["external-secrets"]
   token_ttl                        = 3600
   token_policies                   = ["kubernetes-external-secrets"]
+}
+
+module "proxmox_csi_user" {
+  source = "../../modules/proxmox-csi-user"
+
+  create_csi_role      = true
+  proxmox_csi_username = "red-squadron-talos-csi"
+}
+
+resource "vault_kv_secret_v2" "csi_credentials" {
+  mount = "kv"
+  name  = "csi-proxmox/proxmox-credentials"
+  data_json = jsonencode(
+    {
+      api_token_id = module.proxmox_csi_user.api_token_id
+      api_token    = module.proxmox_csi_user.api_token
+    }
+  )
 }

@@ -1,0 +1,60 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmCharts:
+- name: cilium
+  includeCRDs: true
+  repo: https://helm.cilium.io/
+  releaseName: cilium
+  namespace: kube-system
+  version: "1.17.3"
+  valuesInline:
+    ipam:
+      mode: kubernetes
+    kubeProxyReplacement: true
+    securityContext:
+      capabilities:
+        ciliumAgent: [CHOWN, KILL, NET_ADMIN, NET_RAW, IPC_LOCK, SYS_ADMIN, SYS_RESOURCE, DAC_OVERRIDE, FOWNER, SETGID, SETUID]
+        cleanCiliumState: [NET_ADMIN, SYS_ADMIN, SYS_RESOURCE]
+    cgroup:
+      autoMount:
+        enabled: false
+      hostRoot: /sys/fs/cgroup
+    bgpControlPlane:
+      enabled: true
+    ingressController:
+      enabled: true
+      default: false
+      loadbalancerMode: shared
+      defaultSecretNamespace: kube-system
+      defaultSecretName: default-wildcard-tls-secret
+      service:
+        loadBalancerIP: 172.28.3.128
+    gatewayAPI:
+      enabled: false
+    l2announcements:
+      enabled: true
+      leaseDuration: 3s
+      leaseRenewDeadline: 2s
+      leaseRetryPeriod: 200ms
+    k8sClientRateLimit:
+      qps: 600
+      burst: 900
+    operator:
+      replicas: 1
+    hubble:
+      relay:
+        enabled: true
+      ui:
+        enabled: true
+    k8sServiceHost: "172.28.3.2"
+    k8sServicePort: 6443
+patches:
+- target:
+    group: ""
+    kind: Secret
+  patch: |
+    $patch: delete
+    apiVersion: v1
+    kind: Secret
+    metadata:
+      name: UNUSED

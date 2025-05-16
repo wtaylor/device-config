@@ -1,0 +1,12 @@
+helmCharts:
+- releaseName: cert-manager
+  name: cert-manager
+  repo: https://charts.jetstack.io
+  version: v1.12.3
+  valuesInline:
+    extraArgs:
+    - --dns01-recursive-nameservers-only
+    - --dns01-recursive-nameservers=1.1.1.1:53,8.8.8.8:53
+resources:
+- resources/cloudflare-credentials.yaml
+- resources/cluster-issuer.yaml

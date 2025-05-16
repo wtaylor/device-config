@@ -1,0 +1,26 @@
+apiVersion: argoproj.io/v1alpha1
+kind: Application
+metadata:
+  name: root-app-of-apps
+  finalizers:
+  - resources-finalizer.argocd.argoproj.io
+spec:
+  project: root
+  source:
+    repoURL: https://github.com/wtaylor/device-config.git
+    path: ./kubernetes/by-cluster/red-squadron-talos/root/app-of-apps
+    targetRevision: HEAD
+  destination:
+    server: https://kubernetes.default.svc
+    namespace: argocd
+  syncPolicy:
+    automated:
+      prune: true
+      allowEmpty: true
+      selfHeal: false
+    retry:
+      limit: 5
+      backoff:
+        duration: 5s
+        factor: 2
+        maxDuration: 3m

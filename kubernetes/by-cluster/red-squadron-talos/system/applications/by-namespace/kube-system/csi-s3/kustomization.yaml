@@ -1,0 +1,19 @@
+apiVersion: kustomize.config.k8s.io/v1beta1
+kind: Kustomization
+helmCharts:
+- name: csi-s3
+  repo: https://yandex-cloud.github.io/k8s-csi-s3/charts
+  releaseName: csi-s3
+  namespace: kube-system
+  version: "0.38.3"
+  valuesInline:
+    storageClass:
+      create: true
+      name: csi-s3
+      singleBucket: ssd-csi-s3-volumes
+      reclaimPolicy: Delete
+    secret:
+      create: false
+      name: csi-s3-credentials
+resources:
+- resources/csi-s3-credentials.yaml

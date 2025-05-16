@@ -1,0 +1,15 @@
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: default-wildcard-certificate
+spec:
+  secretName: default-wildcard-tls-secret
+  dnsNames:
+  - willtaylor.info
+  - '*.willtaylor.info'
+  - '*.red-squadron.willtaylor.info'
+  - '*.tk831.net'
+  - '*.w7x6t.dev'
+  issuerRef:
+    kind: ClusterIssuer
+    name: cluster-issuer
