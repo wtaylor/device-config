@@ -13,6 +13,10 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = "2.36.0"
     }
+    kubectl = {
+      source  = "gavinbunney/kubectl"
+      version = "1.19.0"
+    }
     time = {
       source  = "hashicorp/time"
       version = "0.13.1"
@@ -49,6 +53,13 @@ provider "proxmox" {
 }
 
 provider "kubernetes" {
+  host                   = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
+  cluster_ca_certificate = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.ca_certificate)
+  client_certificate     = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.client_certificate)
+  client_key             = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.client_key)
+}
+
+provider "kubectl" {
   host                   = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
   cluster_ca_certificate = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.ca_certificate)
   client_certificate     = base64decode(talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.client_certificate)

@@ -236,7 +236,7 @@ resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
         }
         extraManifests = [
           "https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/refs/tags/v0.9.1/deploy/standalone-install.yaml",
-          "https://raw.githubusercontent.com/wtaylor/device-config/refs/heads/main/kubernetes/common/argocd-core/standalone.yaml"
+          "https://raw.githubusercontent.com/wtaylor/device-config/refs/heads/main/kubernetes/bootstrap-utils/red-squadron-talos-argocd-rendered.yaml"
         ]
         inlineManifests = [
           {
@@ -345,6 +345,7 @@ module "argocd-bootstrap" {
   bootstrap_mode = "system"
 
   depends_on = [
+    talos_machine_bootstrap.red_squadron_talos_one,
     vault_kv_secret_v2.csi_credentials,
     time_sleep.kubernetes_ready
   ]

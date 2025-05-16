@@ -59,7 +59,7 @@ spec:
       hostNetwork: true
       containers:
       - name: cilium-install
-        image: quay.io/cilium/cilium-cli-ci:latest
+        image: alpine/helm:3.17
         env:
         - name: KUBERNETES_SERVICE_HOST
           valueFrom:
@@ -68,53 +68,31 @@ spec:
               fieldPath: status.podIP
         - name: KUBERNETES_SERVICE_PORT
           value: "6443"
-        command:
-        - cilium
-        - install
-        - --version=v1.17.3
-        - --set
-        - ipam.mode=kubernetes
-        - --set
-        - kubeProxyReplacement=true
-        - --set
-        - securityContext.capabilities.ciliumAgent='{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}'
-        - --set
-        - securityContext.capabilities.cleanCiliumState='{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}'
-        - --set
-        - cgroup.autoMount.enabled=false
-        - --set
-        - cgroup.hostRoot=/sys/fs/cgroup
-        - --set
-        - k8sServiceHost=localhost
-        - --set
-        - k8sServicePort=7445
-        - --set
-        - operator.replicas=1
-        - --set
-        - hubble.relay.enabled=true
-        - --set
-        - hubble.ui.enabled=true
-        - --set
-        - routingMode=native
-        - --set
-        - autoDirectNodeRoutes=true
-        - --set
-        - bpf.masquerade=true
-        - --set
-        - ipv4NativeRoutingCIDR=10.244.0.0/16
-        - --set
-        - k8s.requireIpv4PodCIDR=true
-        - --set
-        - installNoConntrackIptablesRules=true
-        - --set
-        - localRedirectPolicy=true
-        - --set
-        - bgpControlPlane.enabled=true
-        - --set
-        - l7proxy=false
-        - --set
-        - envoy.enabled=false
-        - --set
-        - k8sClientRateLimit.qps=1200
-        - --set
-        - k8sClientRateLimit.burst=1800
+        command: [/bin/sh, -c]
+        args:
+        - |
+          helm repo add cilium https://helm.cilium.io
+          helm install cilium cilium/cilium --version 1.17.4 --namespace kube-system \
+           --set ipam.mode=kubernetes \
+           --set kubeProxyReplacement=true \
+           --set securityContext.capabilities.ciliumAgent='{CHOWN,KILL,NET_ADMIN,NET_RAW,IPC_LOCK,SYS_ADMIN,SYS_RESOURCE,DAC_OVERRIDE,FOWNER,SETGID,SETUID}' \
+           --set securityContext.capabilities.cleanCiliumState='{NET_ADMIN,SYS_ADMIN,SYS_RESOURCE}' \
+           --set cgroup.autoMount.enabled=false \
+           --set cgroup.hostRoot=/sys/fs/cgroup \
+           --set k8sServiceHost=localhost \
+           --set k8sServicePort=7445 \
+           --set operator.replicas=1 \
+           --set hubble.relay.enabled=true \
+           --set hubble.ui.enabled=true \
+           --set routingMode=native \
+           --set autoDirectNodeRoutes=true \
+           --set bpf.masquerade=true \
+           --set ipv4NativeRoutingCIDR=10.244.0.0/16 \
+           --set k8s.requireIpv4PodCIDR=true \
+           --set installNoConntrackIptablesRules=true \
+           --set localRedirectPolicy=true \
+           --set bgpControlPlane.enabled=true \
+           --set l7proxy=false \
+           --set envoy.enabled=false \
+           --set k8sClientRateLimit.qps=120 \
+           --set k8sClientRateLimit.burst=180
