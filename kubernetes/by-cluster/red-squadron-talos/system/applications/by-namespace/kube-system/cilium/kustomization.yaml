@@ -43,3 +43,5 @@ helmCharts:
     k8sClientRateLimit:
       qps: 120
       burst: 180
+    k8sServiceHost: "172.28.2.11"
+    k8sServicePort: 6443
