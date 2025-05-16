@@ -1,4 +1,5 @@
 [tools]
+argocd = "2.13.3"
 python = { version = "3.13.1", virtualenv = ".venv" }
 terraform = "1.11.4"
 uv = "0.5.11"
