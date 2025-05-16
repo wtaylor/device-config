@@ -1,0 +1,17 @@
+apiVersion: storage.k8s.io/v1
+kind: StorageClass
+metadata:
+  name: proxmox-zfs
+  annotations:
+    storageclass.kubernetes.io/is-default-class: "true"
+parameters:
+  csi.storage.k8s.io/fstype: ext4
+  storage: vmstorage
+  cache: writethrough
+  ssd: "true"
+mountOptions:
+- noatime
+provisioner: csi.proxmox.sinextra.dev
+allowVolumeExpansion: true
+reclaimPolicy: Delete
+volumeBindingMode: WaitForFirstConsumer

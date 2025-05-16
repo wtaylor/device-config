@@ -331,7 +331,7 @@ module "proxmox_csi_user" {
 
 resource "vault_kv_secret_v2" "csi_credentials" {
   mount = "kv"
-  name  = "csi-proxmox/proxmox-credentials"
+  name  = "services/csi-proxmox/proxmox-credentials"
   data_json = jsonencode(
     {
       api_token_id = module.proxmox_csi_user.api_token_id
