@@ -339,3 +339,13 @@ resource "vault_kv_secret_v2" "csi_credentials" {
     }
   )
 }
+
+module "argocd-bootstrap" {
+  source         = "../../modules/argocd-bootstrap"
+  bootstrap_mode = "system"
+
+  depends_on = [
+    vault_kv_secret_v2.csi_credentials,
+    time_sleep.kubernetes_ready
+  ]
+}
