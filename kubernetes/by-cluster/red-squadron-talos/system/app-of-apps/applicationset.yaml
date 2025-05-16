@@ -9,7 +9,7 @@ spec:
       repoURL: https://github.com/wtaylor/device-config.git
       revision: HEAD
       directories:
-      - path: ./kubernetes/by-cluster/red-squadron-talos/system/applications/by-namespace/*/*
+      - path: kubernetes/by-cluster/red-squadron-talos/system/applications/by-namespace/*/*
   template:
     metadata:
       name: '{{.path.basename}}'
@@ -21,7 +21,7 @@ spec:
         path: '{{.path.path}}'
       destination:
         server: https://kubernetes.default.svc
-        namespace: '{{index .path.segments 4}}'
+        namespace: '{{index .path.segments 6}}'
       syncPolicy:
         automated:
           prune: true
