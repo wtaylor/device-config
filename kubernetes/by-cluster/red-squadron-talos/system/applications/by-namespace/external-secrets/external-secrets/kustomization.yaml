@@ -7,3 +7,4 @@ helmCharts:
 resources:
 - resources/cluster-secret-store.yaml
 - resources/service-account.yaml
+- resources/service-account-crb.yaml
