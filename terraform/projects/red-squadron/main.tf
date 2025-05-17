@@ -296,7 +296,7 @@ module "vault_auth" {
 
   create_namespace                  = true
   namespace                         = "external-secrets"
-  service_account_name              = "external-secrets"
+  service_account_name              = "eso-vault-css"
   service_account_token_secret_name = "external-secrets-vault-token"
 }
 
@@ -320,6 +320,7 @@ resource "vault_kubernetes_auth_backend_role" "red_squadron" {
   bound_service_account_namespaces = ["external-secrets"]
   token_ttl                        = 3600
   token_policies                   = ["kubernetes-external-secrets"]
+  alias_name_source                = "serviceaccount_name"
 }
 
 module "proxmox_csi_user" {

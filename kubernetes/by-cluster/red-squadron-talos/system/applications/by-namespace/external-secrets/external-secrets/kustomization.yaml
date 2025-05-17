@@ -3,6 +3,7 @@ helmCharts:
   name: external-secrets
   repo: https://charts.external-secrets.io
   version: "0.8.5"
+  namespace: external-secrets
 resources:
 - resources/cluster-secret-store.yaml
 - resources/service-account.yaml
