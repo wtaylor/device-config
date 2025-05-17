@@ -7,8 +7,8 @@ resource "kubernetes_namespace_v1" "service_ns" {
 
 resource "kubernetes_service_account_v1" "service_account" {
   metadata {
-    name      = var.create_namespace ? kubernetes_namespace_v1.service_ns[0].metadata[0].name : var.namespace
-    namespace = var.namespace
+    name      = var.service_account_name
+    namespace = var.create_namespace ? kubernetes_namespace_v1.service_ns[0].metadata[0].name : var.namespace
   }
 }
 
