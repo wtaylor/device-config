@@ -308,8 +308,8 @@ resource "vault_kubernetes_auth_backend_config" "red_squadron" {
   backend                = vault_auth_backend.kubernetes.path
   kubernetes_host        = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
   kubernetes_ca_cert     = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.ca_certificate
-  token_reviewer_jwt     = module.vault_auth.service_account_token
-  disable_iss_validation = false
+  disable_local_ca_jwt   = true
+  disable_iss_validation = true
   issuer                 = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
 }
 
