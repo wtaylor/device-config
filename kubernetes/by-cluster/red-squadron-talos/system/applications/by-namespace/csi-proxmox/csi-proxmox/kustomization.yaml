@@ -2,4 +2,5 @@ resources:
 - https://raw.githubusercontent.com/sergelogvinov/proxmox-csi-plugin/v0.11.0/docs/deploy/proxmox-csi-plugin-release.yml
 - resources/cluster-config-secret.yaml
 - resources/storage-class.yaml
-- resources/backup-vac.yaml
+## Disabled as feature gate not enabled
+# - resources/backup-vac.yaml 
