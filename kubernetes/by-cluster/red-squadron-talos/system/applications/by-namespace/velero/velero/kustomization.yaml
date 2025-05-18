@@ -76,3 +76,5 @@ helmCharts:
           remoteRef:
             key: kv/services/velero/backup-location-s3-credentials
             property: config
+resources:
+- resources/change-storage-class-cm.yaml
