@@ -12,6 +12,7 @@ helmCharts:
         provider: aws
         bucket: ssdnb-velero
         default: true
+        accessMode: ReadOnly
         credential:
           name: cloud-credentials
           key: cloud
@@ -22,6 +23,7 @@ helmCharts:
       - name: full-remote
         provider: aws
         bucket: ssd-velero
+        accessMode: ReadOnly
         credential:
           name: cloud-credentials
           key: cloud
