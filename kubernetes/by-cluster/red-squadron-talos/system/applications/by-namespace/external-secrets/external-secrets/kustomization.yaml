@@ -4,6 +4,7 @@ helmCharts:
   repo: https://charts.external-secrets.io
   version: "0.8.5"
   namespace: external-secrets
+  includeCRDs: true
 resources:
 - resources/cluster-secret-store.yaml
 - resources/service-account.yaml

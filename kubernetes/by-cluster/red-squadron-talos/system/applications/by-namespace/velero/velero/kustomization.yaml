@@ -3,6 +3,7 @@ helmCharts:
   name: velero
   repo: https://vmware-tanzu.github.io/helm-charts
   version: "7.1.5"
+  includeCRDs: true
   valuesInline:
     configuration:
       backupStorageLocation:
