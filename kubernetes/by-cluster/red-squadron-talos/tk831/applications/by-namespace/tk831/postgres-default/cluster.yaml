@@ -3,6 +3,7 @@ kind: Cluster
 metadata:
   name: postgres-tk831-default
 spec:
+  imageName: ghcr.io/cloudnative-pg/postgresql:15.1
   instances: 1
   primaryUpdateStrategy: unsupervised
   superuserSecret:
