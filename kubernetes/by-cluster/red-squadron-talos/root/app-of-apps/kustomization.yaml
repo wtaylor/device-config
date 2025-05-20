@@ -1,0 +1,5 @@
+resources:
+- projects/system/project.yaml
+- projects/system/application.yaml
+- projects/tk831/project.yaml
+- projects/tk831/application.yaml

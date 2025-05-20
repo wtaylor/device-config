@@ -1,0 +1,57 @@
+apiVersion: postgresql.cnpg.io/v1
+kind: Cluster
+metadata:
+  name: postgres-tk831-default
+spec:
+  instances: 1
+  primaryUpdateStrategy: unsupervised
+  superuserSecret:
+    name: postgres-default-admin-credentials
+  enableSuperuserAccess: true
+  storage:
+    storageClass: proxmox-zfs
+    size: 100Gi
+  walStorage:
+    storageClass: proxmox-zfs
+    size: 50Gi
+  postgresql:
+    parameters:
+      max_slot_wal_keep_size: "10GB"
+  bootstrap:
+    recovery:
+      source: postgres-default
+  externalClusters:
+  - name: postgres-default
+    barmanObjectStore:
+      endpointURL: https://s3.willtaylor.info
+      destinationPath: s3://ssd-cnpg-postgres-default/
+      s3Credentials:
+        accessKeyId:
+          name: postgres-default-barman-s3-credentials
+          key: access_key
+        secretAccessKey:
+          name: postgres-default-barman-s3-credentials
+          key: secret_key
+      wal:
+        compression: gzip
+        maxParallel: 8
+        encryption: AES256
+  backup:
+    barmanObjectStore:
+      endpointURL: https://s3.willtaylor.info
+      destinationPath: s3://ssd-cnpg-postgres-default/
+      s3Credentials:
+        accessKeyId:
+          name: postgres-default-barman-s3-credentials
+          key: access_key
+        secretAccessKey:
+          name: postgres-default-barman-s3-credentials
+          key: secret_key
+      wal:
+        compression: gzip
+        maxParallel: 8
+        encryption: AES256
+    retentionPolicy: 14d
+  resources:
+    requests:
+      memory: "512Mi"
