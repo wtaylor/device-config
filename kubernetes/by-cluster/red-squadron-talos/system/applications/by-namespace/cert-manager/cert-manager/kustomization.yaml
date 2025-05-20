@@ -4,6 +4,7 @@ helmCharts:
   repo: https://charts.jetstack.io
   includeCRDs: true
   version: v1.12.3
+  namespace: cert-manager
   valuesInline:
     installCRDs: true
     extraArgs:
