@@ -12,7 +12,7 @@ spec:
       - path: kubernetes/by-cluster/red-squadron-talos/tk831/applications/by-namespace/*/*
   template:
     metadata:
-      name: '{{.path.basename}}'
+      name: 'tk831-{{.path.basename}}'
     spec:
       project: tk831
       source:
