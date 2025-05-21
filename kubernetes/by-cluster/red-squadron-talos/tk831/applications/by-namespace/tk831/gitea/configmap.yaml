@@ -1,0 +1,94 @@
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: gitea
+  labels:
+    app.kubernetes.io/name: gitea
+data:
+  app.ini: |
+    APP_NAME = Gitea: Git with a cup of tea
+    RUN_MODE = prod
+    RUN_USER = git
+
+    [repository]
+    ROOT = /data/git/repositories
+
+    [repository.upload]
+    TEMP_PATH = /data/gitea/uploads
+
+    [server]
+    APP_DATA_PATH    = /data/gitea
+    SSH_DOMAIN       = git.tk831.net
+    START_SSH_SERVER = true
+    HTTP_PORT        = 3000
+    SSH_LISTEN_PORT  = 3539
+    SSH_PORT         = 3539
+    ROOT_URL         = https://gitea.tk831.net
+    DOMAIN           = gitea.tk831.net
+    LFS_START_SERVER = true
+    LFS_JWT_SECRET   = VlSo07JDYNuK23hEnVxt9GRkkfUGmEzY5dxIaBNF8kM
+    OFFLINE_MODE     = true
+
+    [database]
+    DB_TYPE  = postgres
+    HOST     = postgres-default-rw.svc.cluster.local:5432
+    NAME     = gitea
+    USER     = docker
+    PASSWD   = docker
+    SSL_MODE = disable
+
+    [session]
+    PROVIDER_CONFIG = /data/gitea/sessions
+    PROVIDER        = file
+
+    [picture]
+    DISABLE_GRAVATAR        = true
+    ENABLE_FEDERATED_AVATAR = false
+
+    [log]
+    ROOT_PATH = /data/gitea/log
+    MODE      = console
+    LEVEL     = Info
+
+    [security]
+    INSTALL_LOCK   = true
+    SECRET_KEY     = gX2ktRbaL8
+    INTERNAL_TOKEN = eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJuYmYiOjE1MjYxMTk1NDZ9.tt_40NZsKiXTKuaG1aAqC_1xPNr5s550nUgfHDSmf5A
+
+    [mailer]
+    ENABLED   = true
+    SMTP_ADDR = smtp.gmail.com:587
+    FROM      = gitea@willtaylor.info
+    USER      = me@willtaylor.info
+    PASSWD    = ahfsgveziteuatjb
+
+    [service]
+    REGISTER_EMAIL_CONFIRM            = false
+    ENABLE_NOTIFY_MAIL                = false
+    DISABLE_REGISTRATION              = true
+    ENABLE_CAPTCHA                    = false
+    REQUIRE_SIGNIN_VIEW               = false
+    DEFAULT_KEEP_EMAIL_PRIVATE        = false
+    DEFAULT_ALLOW_CREATE_ORGANIZATION = true
+    DEFAULT_ENABLE_TIMETRACKING       = true
+    NO_REPLY_ADDRESS                  = noreply.example.org
+
+    [webhook]
+    ALLOWED_HOST_LIST = *
+
+    [openid]
+    ENABLE_OPENID_SIGNIN = true
+    ENABLE_OPENID_SIGNUP = false
+    WHITELISTED_URIS     = auth.tk831.net
+
+    [oauth2]
+    JWT_SECRET = k0FaSJzsGkqA4wjr4fXXh8UWjcD9f2Ht_CznwmWcVnY
+
+    [storage]
+    STORAGE_TYPE            = minio
+    MINIO_ENDPOINT          = s3.willtaylor.info
+    MINIO_BUCKET            = ssd-gitea
+    MINIO_LOCATION          = eu-west-1
+    MINIO_USE_SSL           = true
+    MINIO_ACCESS_KEY_ID     = pZ9u6madMdk4Mf43VkJ8yx9Y
+    MINIO_SECRET_ACCESS_KEY = 8FxTtzqRHvptGdNK8qDmQVHi

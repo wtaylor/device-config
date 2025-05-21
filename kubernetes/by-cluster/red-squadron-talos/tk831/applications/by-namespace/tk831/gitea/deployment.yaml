@@ -1,0 +1,63 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: gitea
+  labels:
+    app.kubernetes.io/name: gitea
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: gitea
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: gitea
+      annotations:
+        backup.velero.io/backup-volumes: gitea-data,gitea-git,gitea-ssh
+    spec:
+      volumes:
+      - name: gitea-config
+        configMap:
+          name: gitea
+      - name: gitea-data
+        persistentVolumeClaim:
+          claimName: gitea-data-pvc
+      - name: gitea-git
+        persistentVolumeClaim:
+          claimName: gitea-git-pvc
+      - name: gitea-ssh
+        persistentVolumeClaim:
+          claimName: gitea-ssh-pvc
+      initContainers:
+      - name: copy-app-ini
+        image: busybox
+        command: ["/bin/sh", "-c"]
+        args:
+        - echo Initialising config; mkdir -p /data/gitea/conf; cp /conf/app.ini /data/gitea/conf/app.ini; echo \### CONFIG \###; cat /data/gitea/conf/app.ini; echo \### END CONFIG \###; chmod -R 777 /data/gitea/conf;
+        volumeMounts:
+        - name: gitea-config
+          mountPath: /conf/app.ini
+          subPath: app.ini
+        - name: gitea-data
+          mountPath: /data/gitea
+      containers:
+      - name: gitea
+        image: gitea/gitea:nightly
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: TZ
+          value: Europe/London
+        ports:
+        - containerPort: 3000
+          name: http
+          protocol: TCP
+        - containerPort: 3539
+          name: ssh
+        volumeMounts:
+        - name: gitea-data
+          mountPath: /data/gitea
+        - name: gitea-git
+          mountPath: /data/git
+        - name: gitea-ssh
+          mountPath: /data/ssh

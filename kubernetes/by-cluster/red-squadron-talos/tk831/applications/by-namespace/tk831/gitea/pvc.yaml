@@ -1,0 +1,44 @@
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-data-pvc
+  labels:
+    app.kubernetes.io/name: gitea
+spec:
+  storageClassName: local-path-ssd
+  volumeName: pvc-c3fb6fd6-905b-4df9-9214-fd932d802046
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 2Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-git-pvc
+  labels:
+    app.kubernetes.io/name: gitea
+spec:
+  storageClassName: local-path-ssd
+  volumeName: pvc-a9980c05-617c-44fb-9a5d-bfab68bb6f0d
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 10Gi
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: gitea-ssh-pvc
+  labels:
+    app.kubernetes.io/name: gitea
+spec:
+  storageClassName: local-path-ssd
+  volumeName: pvc-07e4f22c-d22b-4c1a-abaa-400fb4aef3c9
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
