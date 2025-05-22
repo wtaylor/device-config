@@ -4,7 +4,7 @@ metadata:
   name: default
 spec:
   gatewayClassName: default
-  addresses: ["172"]
+  addresses: ["172.28.5.0"]
   listeners:
   - name: http
     protocol: HTTP

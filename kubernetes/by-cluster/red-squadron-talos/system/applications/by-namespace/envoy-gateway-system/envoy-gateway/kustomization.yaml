@@ -1,2 +1,4 @@
 resources:
 - https://github.com/envoyproxy/gateway/releases/download/v1.4.0/install.yaml
+- resources/gatewayclass.yaml
+- resources/gateway.yaml

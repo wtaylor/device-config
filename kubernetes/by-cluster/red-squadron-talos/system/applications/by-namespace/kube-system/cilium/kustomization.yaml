@@ -45,3 +45,6 @@ helmCharts:
       burst: 180
     k8sServiceHost: "172.28.2.11"
     k8sServicePort: 6443
+resources:
+- resources/lb-ip-pool.yaml
+- resources/bgp.yaml
