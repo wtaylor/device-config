@@ -4,6 +4,8 @@ metadata:
   name: system-applications
 spec:
   goTemplate: true
+  syncPolicy:
+    preserveResourcesOnDeletion: true
   generators:
   - git:
       repoURL: https://github.com/wtaylor/device-config.git

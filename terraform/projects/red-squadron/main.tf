@@ -242,6 +242,15 @@ resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
           {
             name     = "cilium-install-job"
             contents = file("${path.module}/files/cilium-install-job.yaml")
+          },
+          {
+            name     = "argocd-namespace"
+            contents = <<EOF
+            apiVersion: v1
+            kind: Namespace
+            metadata:
+              name: argocd
+            EOF
           }
         ]
       }
