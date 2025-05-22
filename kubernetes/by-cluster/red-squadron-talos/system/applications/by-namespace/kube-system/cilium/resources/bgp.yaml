@@ -1,0 +1,53 @@
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPClusterConfig
+metadata:
+  name: cilium-opnsense-bgp-cluster-config
+spec:
+  nodeSelector:
+    matchLabels:
+      kubernetes.io/hostname: red-one-talos
+  bgpInstances:
+  - name: instance-65502
+    localASN: 65502
+    peers:
+    - name: peer-65502-opnsense
+      peerASN: 65401
+      peerAddress: 172.28.0.1
+      peerConfigRef:
+        name: cilium-opnsense-peer
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPPeerConfig
+metadata:
+  name: cilium-opnsense-peer
+spec:
+  timers:
+    holdTimeSeconds: 9
+    keepAliveTimeSeconds: 30
+  authSecretRef: cilium-opnsense-bgp-auth-secret
+  ebgpMultihop: 10
+  gracefulRestart:
+    enabled: true
+    restartTimeSeconds: 120
+  families:
+  - afi: ipv4
+    safi: unicast
+    advertisements:
+      matchLabels:
+        advertise: opnsense
+---
+apiVersion: cilium.io/v2alpha1
+kind: CiliumBGPAdvertisement
+metadata:
+  name: bgp-opnsense-advertisements
+  labels:
+    advertise: opnsense
+spec:
+  advertisements:
+  - advertisementType: Service
+    service:
+      addresses: # <-- specify the service types to advertise
+      - LoadBalancerIP
+    selector: # <-- select all services
+      matchExpressions:
+      - {key: somekey, operator: NotIn, values: ['never-used-value']}

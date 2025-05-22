@@ -3,8 +3,6 @@ kind: AppProject
 metadata:
   name: root
   namespace: argocd
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   description: Cluster root project
   sourceRepos:
