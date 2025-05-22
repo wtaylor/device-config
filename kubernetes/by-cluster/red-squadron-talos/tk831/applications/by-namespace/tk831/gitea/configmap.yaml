@@ -31,7 +31,7 @@ data:
 
     [database]
     DB_TYPE  = postgres
-    HOST     = postgres-default-rw.svc.cluster.local:5432
+    HOST     = postgres-tk831-default-rw.svc.cluster.local:5432
     NAME     = gitea
     USER     = docker
     PASSWD   = docker
