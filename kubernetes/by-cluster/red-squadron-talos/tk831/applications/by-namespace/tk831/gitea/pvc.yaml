@@ -5,8 +5,8 @@ metadata:
   labels:
     app.kubernetes.io/name: gitea
 spec:
-  storageClassName: local-path-ssd
-  volumeName: pvc-c3fb6fd6-905b-4df9-9214-fd932d802046
+  storageClassName: proxmox-zfs
+  volumeName: pvc-4542f48d-6569-45a5-a684-820fb5a1684d
   accessModes:
   - ReadWriteOnce
   resources:
@@ -20,8 +20,8 @@ metadata:
   labels:
     app.kubernetes.io/name: gitea
 spec:
-  storageClassName: local-path-ssd
-  volumeName: pvc-a9980c05-617c-44fb-9a5d-bfab68bb6f0d
+  storageClassName: proxmox-zfs
+  volumeName: pvc-7a07e30d-147a-4acc-94a2-7a3fb20a6e69
   accessModes:
   - ReadWriteOnce
   resources:
@@ -35,8 +35,8 @@ metadata:
   labels:
     app.kubernetes.io/name: gitea
 spec:
-  storageClassName: local-path-ssd
-  volumeName: pvc-07e4f22c-d22b-4c1a-abaa-400fb4aef3c9
+  storageClassName: proxmox-zfs
+  volumeName: pvc-c1dd4f6a-8166-4469-b6b3-40bd81559060
   accessModes:
   - ReadWriteOnce
   resources:
