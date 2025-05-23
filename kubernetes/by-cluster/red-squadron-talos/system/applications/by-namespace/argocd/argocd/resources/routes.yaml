@@ -1,0 +1,35 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-http
+spec:
+  parentRefs:
+  - name: default
+    namespace: kube-system
+    sectionName: http
+  hostnames: [argocd.tk831.net]
+  rules:
+  - filters:
+    - type: RequestRedirect
+      requestRedirect:
+        scheme: https
+        statusCode: 301
+---
+apiVersion: gateway.networking.k8s.io/v1
+kind: HTTPRoute
+metadata:
+  name: argocd-https
+spec:
+  parentRefs:
+  - name: default
+    namespace: kube-system
+    sectionName: https
+  hostnames: [argocd.tk831.net]
+  rules:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
+    - name: argocd-server
+      port: 80
