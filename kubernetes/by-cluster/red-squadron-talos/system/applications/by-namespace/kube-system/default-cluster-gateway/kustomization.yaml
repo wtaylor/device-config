@@ -1,3 +1,4 @@
 resources:
 - resources/certificates.yaml
+- resources/envoy-proxy-config.yaml
 - resources/gateway.yaml
