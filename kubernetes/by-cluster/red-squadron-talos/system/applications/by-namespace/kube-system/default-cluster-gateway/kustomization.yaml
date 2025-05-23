@@ -1,0 +1,3 @@
+resources:
+- resources/certificates.yaml
+- resources/gateway.yaml

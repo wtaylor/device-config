@@ -14,3 +14,15 @@ spec:
     allowedRoutes:
       namespaces:
         from: All
+  - name: https
+    protocol: HTTPS
+    port: 443
+    tls:
+      mode: Terminate
+      certificateRefs:
+      - kind: Secret
+        group: ""
+        name: default-cluster-gateway-tls-certificates
+    allowedRoutes:
+      namespaces:
+        from: All

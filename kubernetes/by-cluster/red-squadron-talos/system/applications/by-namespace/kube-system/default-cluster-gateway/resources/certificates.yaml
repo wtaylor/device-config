@@ -1,9 +1,9 @@
 apiVersion: cert-manager.io/v1
 kind: Certificate
 metadata:
-  name: default-wildcard-certificate
+  name: default-cluster-gateway-tls-certificates
 spec:
-  secretName: default-wildcard-tls-secret
+  secretName: default-cluster-gateway-tls-certificates
   dnsNames:
   - willtaylor.info
   - '*.willtaylor.info'
