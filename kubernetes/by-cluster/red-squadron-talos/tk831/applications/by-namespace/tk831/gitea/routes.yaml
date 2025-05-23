@@ -5,6 +5,7 @@ metadata:
 spec:
   parentRefs:
   - name: default
+    namespace: kube-system
     sectionName: http
   hostnames: [gitea.tk831.net]
   rules:
@@ -21,6 +22,7 @@ metadata:
 spec:
   parentRefs:
   - name: default
+    namespace: kube-system
     sectionName: https
   hostnames: [gitea.tk831.net]
   rules:
