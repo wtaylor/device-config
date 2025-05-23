@@ -24,6 +24,10 @@ spec:
     sectionName: https
   hostnames: [gitea.tk831.net]
   rules:
-  - backendRefs:
+  - matches:
+    - path:
+        type: PathPrefix
+        value: /
+    backendRefs:
     - name: gitea-http
       port: 3000
