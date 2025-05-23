@@ -14,7 +14,6 @@ spec:
       labels:
         app.kubernetes.io/name: keycloak
     spec:
-      serviceAccountName: keycloak
       containers:
       - name: keycloak
         image: quay.io/keycloak/keycloak:26.0.0
