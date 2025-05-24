@@ -1,0 +1,8 @@
+state_file_path: /data/state.json
+mumble:
+  server_address: mumble.oliver.youle.io
+  server_port: 64738
+  insecure_disable_certificate_verification: true
+  filter_out_inferred_bot_users: true
+telegram:
+  chat_id: -1001752246215

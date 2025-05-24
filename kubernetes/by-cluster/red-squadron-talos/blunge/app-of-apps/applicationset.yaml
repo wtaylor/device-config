@@ -1,0 +1,32 @@
+apiVersion: argoproj.io/v1alpha1
+kind: ApplicationSet
+metadata:
+  name: blunge-applications
+spec:
+  goTemplate: true
+  generators:
+  - git:
+      repoURL: https://github.com/wtaylor/device-config.git
+      revision: HEAD
+      directories:
+      - path: kubernetes/by-cluster/red-squadron-talos/blunge/applications/by-namespace/*/*
+  template:
+    metadata:
+      name: 'blunge-{{.path.basename}}'
+    spec:
+      project: blunge
+      source:
+        repoURL: https://github.com/wtaylor/device-config.git
+        targetRevision: HEAD
+        path: '{{.path.path}}'
+      destination:
+        server: https://kubernetes.default.svc
+        namespace: '{{index .path.segments 6}}'
+      syncPolicy:
+        automated:
+          prune: true
+          selfHeal: false
+          allowEmpty: false
+        syncOptions:
+        - CreateNamespace=true
+        - ServerSideApply=true

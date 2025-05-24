@@ -1,0 +1,65 @@
+apiVersion: apps/v1
+kind: StatefulSet
+metadata:
+  name: blungebot
+  labels:
+    app.kubernetes.io/name: blungebot
+spec:
+  replicas: 1
+  serviceName: blungebot
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: blungebot
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: blungebot
+      annotations:
+        backup.velero.io/backup-volumes: data
+    spec:
+      securityContext:
+        runAsUser: 1001
+        runAsGroup: 1001
+        fsGroup: 1001
+      containers:
+      - name: blungebot
+        image: quay.io/wtaylor22/mumble-telegram-bot:61d797d
+        imagePullPolicy: IfNotPresent
+        env:
+        - name: RUST_LOG
+          value: warn,main=info,mumble_client_rs=info
+        - name: MUMBLE_TG_BOT__TELEGRAM__TOKEN
+          valueFrom:
+            secretKeyRef:
+              name: blungebot-service-credentials
+              key: telegramToken
+        - name: MUMBLE_TG_BOT__MUMBLE__USERNAME
+          valueFrom:
+            secretKeyRef:
+              name: blungebot-service-credentials
+              key: mumbleUsername
+        - name: MUMBLE_TG_BOT__MUMBLE__PASSWORD
+          valueFrom:
+            secretKeyRef:
+              name: blungebot-service-credentials
+              key: mumblePassword
+        volumeMounts:
+        - name: config
+          mountPath: /var/run/mumble-telegram-bot
+        - name: data
+          mountPath: /data
+      volumes:
+      - name: config
+        configMap:
+          name: blungebot-cm
+  volumeClaimTemplates:
+  - apiVersion: v1
+    kind: PersistentVolumeClaim
+    metadata:
+      name: data
+    spec:
+      accessModes: ["ReadWriteOnce"]
+      storageClassName: proxmox-zfs
+      resources:
+        requests:
+          storage: 1Gi
