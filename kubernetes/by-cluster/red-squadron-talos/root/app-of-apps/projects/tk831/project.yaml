@@ -2,8 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: AppProject
 metadata:
   name: tk831
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   description: Applications for running the tk831 household
   sourceRepos:

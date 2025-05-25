@@ -1,0 +1,21 @@
+helmCharts:
+- releaseName: ingress-nginx
+  name: ingress-nginx
+  repo: https://kubernetes.github.io/ingress-nginx
+  includeCRDs: false
+  version: "4.12.2"
+  namespace: ingress-nginx
+  valuesInline:
+    controller:
+      extraArgs:
+        default-ssl-certificate: "kube-system/default-cluster-gateway-tls-certificates"
+      service:
+        loadBalancerIP: "172.28.5.5"
+        externalTrafficPolicy: Local
+      metrics:
+        enabled: true
+      podAnnotations:
+        prometheus.io/scrape: "true"
+        prometheus.io/port: "10254"
+      ingressClassResource:
+        default: true

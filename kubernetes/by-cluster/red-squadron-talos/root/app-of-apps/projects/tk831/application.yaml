@@ -2,8 +2,6 @@ apiVersion: argoproj.io/v1alpha1
 kind: Application
 metadata:
   name: tk831-app-of-apps
-  finalizers:
-  - resources-finalizer.argocd.argoproj.io
 spec:
   project: tk831
   source:
