@@ -3,3 +3,4 @@ resources:
 - resources/envoy-proxy-config.yaml
 - resources/gateway.yaml
 - resources/ctp-default.yaml
+- resources/btp-default.yaml
