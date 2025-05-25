@@ -8,6 +8,6 @@ spec:
     kind: Gateway
     name: default
   connection:
-    bufferLimit: 4Gi
+    bufferLimit: 4Gb
   tls:
     alpnProtocols: [http/1.0, http/1.1]
