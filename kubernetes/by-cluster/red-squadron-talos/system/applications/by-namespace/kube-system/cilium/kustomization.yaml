@@ -41,8 +41,8 @@ helmCharts:
     envoy:
       enabled: false
     k8sClientRateLimit:
-      qps: 120
-      burst: 180
+      qps: 1200
+      burst: 1800
     k8sServiceHost: "172.28.2.11"
     k8sServicePort: 6443
 resources:
