@@ -7,5 +7,7 @@ spec:
   - group: gateway.networking.k8s.io
     kind: Gateway
     name: default
+  connection:
+    bufferLimit: 4Gi
   tls:
     alpnProtocols: [http/1.0, http/1.1]
