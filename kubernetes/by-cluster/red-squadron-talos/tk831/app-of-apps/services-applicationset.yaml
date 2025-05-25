@@ -26,6 +26,6 @@ spec:
         namespace: '{{index .path.segments 4}}'
       syncPolicy:
         automated:
-          prune: true
+          prune: false
           selfHeal: false
           allowEmpty: false
