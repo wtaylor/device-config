@@ -28,4 +28,4 @@ spec:
     port: 3539
     targetPort: 3539
   type: LoadBalancer
-  loadBalancerIP: "172.28.5.1"
+  loadBalancerIP: "172.28.3.129"

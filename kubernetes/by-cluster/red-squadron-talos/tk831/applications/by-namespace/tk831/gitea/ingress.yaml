@@ -1,24 +1,24 @@
-apiVersion: networking.k8s.io/v1
-kind: Ingress
-metadata:
-  name: gitea-tk831
-  labels:
-    app.kubernetes.io/name: gitea
-  annotations:
-    kubernetes.io/ingress.class: nginx
-    nginx.ingress.kubernetes.io/proxy-body-size: 1024m
-spec:
-  tls:
-  - hosts:
-    - gitea.tk831.net
-  rules:
-  - host: gitea.tk831.net
-    http:
-      paths:
-      - path: /
-        pathType: Prefix
-        backend:
-          service:
-            name: gitea-http
-            port:
-              number: 3000
+# apiVersion: networking.k8s.io/v1
+# kind: Ingress
+# metadata:
+#   name: gitea-tk831
+#   labels:
+#     app.kubernetes.io/name: gitea
+#   annotations:
+#     kubernetes.io/ingress.class: nginx
+#     nginx.ingress.kubernetes.io/proxy-body-size: 1024m
+# spec:
+#   tls:
+#   - hosts:
+#     - gitea.tk831.net
+#   rules:
+#   - host: gitea.tk831.net
+#     http:
+#       paths:
+#       - path: /
+#         pathType: Prefix
+#         backend:
+#           service:
+#             name: gitea-http
+#             port:
+#               number: 3000
