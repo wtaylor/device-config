@@ -1,12 +1,12 @@
 apiVersion: argoproj.io/v1alpha1
 kind: ApplicationSet
 metadata:
-  name: tk831-services-applications
+  name: tk831-home-applications
 spec:
   goTemplate: true
   generators:
   - git:
-      repoURL: https://gitea.tk831.net/Ops/services-app-of-apps.git
+      repoURL: https://gitea.tk831.net/Ops/home-app-of-apps.git
       revision: HEAD
       directories:
       - path: by-cluster/red-squadron/applications/by-namespace/*/*
@@ -16,7 +16,7 @@ spec:
     spec:
       project: tk831
       source:
-        repoURL: https://gitea.tk831.net/Ops/services-app-of-apps.git
+        repoURL: https://gitea.tk831.net/Ops/home-app-of-apps.git
         targetRevision: HEAD
         path: '{{.path.path}}'
       destination:
