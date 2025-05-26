@@ -2,4 +2,4 @@ resources:
 - resources/certificates.yaml
 - resources/envoy-proxy-config.yaml
 - resources/gateway.yaml
-- resources/ctp-default.yaml
+# - resources/ctp-default.yaml

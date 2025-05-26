@@ -8,4 +8,4 @@ spec:
     kubernetes:
       envoyService:
         annotations:
-          lbipam.cilium.io/ips: "172.28.5.0"
+          lbipam.cilium.io/ips: "172.28.3.128"
