@@ -1,0 +1,9 @@
+apiVersion: cilium.io/v2alpha1
+kind: CiliumL2AnnouncementPolicy
+metadata:
+  name: cluster-l2-policy
+spec:
+  interfaces:
+  - ^eth0$
+  externalIPs: false
+  loadBalancerIPs: true
