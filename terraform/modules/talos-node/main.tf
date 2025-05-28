@@ -1,5 +1,11 @@
 locals {
   datastore_id = "local-zfs"
+
+  labels_remove_lb_exclusion_patch = {
+    "node.kubernetes.io/exclude-from-external-load-balancers" = {
+      "$patch" = "delete"
+    }
+  }
 }
 
 resource "proxmox_virtual_environment_vm" "node_vm" {
@@ -42,11 +48,11 @@ resource "proxmox_virtual_environment_vm" "node_vm" {
   }
 
   dynamic "hostpci" {
-    for_each = toset(var.vm_host_pci_mapping_names)
+    for_each = var.vm_host_pci_mapping_names
 
     content {
-      device  = "hostpci${index(var.vm_host_pci_mapping_names, each.value)}"
-      mapping = each.value
+      device  = "hostpci${index(var.vm_host_pci_mapping_names, hostpci.value)}"
+      mapping = hostpci.value
       pcie    = true
     }
   }
@@ -55,6 +61,7 @@ resource "proxmox_virtual_environment_vm" "node_vm" {
     datastore_id = local.datastore_id
     interface    = "scsi0"
     size         = 256
+    serial       = "viscsi-001"
     backup       = true
     replicate    = true
     ssd          = true
@@ -112,22 +119,23 @@ resource "talos_machine_configuration_apply" "node_mc" {
             interface = "eth0"
             dhcp      = false
             addresses = ["${var.node_ip}/22"]
-            vip = {
+            vip = var.node_role == "controlplane" ? {
               ip = var.cluster_vip
-            }
+            } : null
             routes = [{
               network = "0.0.0.0/0"
               gateway = var.node_default_gateway
             }]
           }]
         }
-        nodeLabels = merge({
-          "topology.kubernetes.io/region" = var.vm_host_cluster_name
-          "topology.kubernetes.io/zone"   = var.vm_host_node_name
-          "node.kubernetes.io/exclude-from-external-load-balancers" = {
-            "$patch" = "delete"
-          }
-        }, var.node_labels)
+        nodeLabels = merge(
+          {
+            "topology.kubernetes.io/region" = var.vm_host_cluster_name
+            "topology.kubernetes.io/zone"   = var.vm_host_node_name
+          },
+          var.node_role == "controlplane" ? local.labels_remove_lb_exclusion_patch : {},
+          var.node_labels
+        )
         features = {
           hostDNS = {
             forwardKubeDNSToHost = false

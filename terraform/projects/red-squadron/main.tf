@@ -157,7 +157,7 @@ module "talos_nodes" {
 
   vm_installer_cdrom_file_id = proxmox_virtual_environment_download_file.talos_iso[each.value.host_node_name].id
 
-  vm_host_pci_mapping_names          = each.value.pci_passes
+  vm_host_pci_mapping_names          = [for p in each.value.pci_passes : p.name]
   node_talos_oci_installer_image_url = data.talos_image_factory_urls.red_squadron.urls.installer
 
   node_ip              = each.value.node_ip
@@ -182,16 +182,6 @@ resource "talos_cluster_kubeconfig" "red_squadron_talos" {
   depends_on           = [module.talos_nodes["red-one-talos"]]
   client_configuration = talos_machine_secrets.red_squadron_talos.client_configuration
   node                 = local.talos_nodes["red-one-talos"].node_ip
-}
-
-module "vault_auth" {
-  source     = "../../modules/k8s-vault-auth"
-  depends_on = [module.talos_nodes["red-one-talos"]]
-
-  create_namespace                  = true
-  namespace                         = "external-secrets"
-  service_account_name              = "eso-vault-css"
-  service_account_token_secret_name = "external-secrets-vault-token"
 }
 
 resource "vault_auth_backend" "kubernetes" {

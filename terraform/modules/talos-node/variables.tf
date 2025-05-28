@@ -80,7 +80,6 @@ variable "node_talos_secrets_client_configuration" {
     ca_certificate     = string
     client_certificate = string
     client_key         = string
-    host               = string
   })
 }
 
