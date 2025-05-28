@@ -1,10 +1,63 @@
 locals {
-  talos_version     = "v1.10.1"
-  talos_cluster_vip = "172.28.2.10"
-  talos_one = {
-    ip               = "172.28.2.11"
-    root_disk_serial = "viscsi-001"
+  talos_version = "v1.10.1"
+
+  cluster_vip  = "172.28.2.10"
+  cluster_name = "red-squadron-talos"
+
+  default_gateway = "172.28.0.1"
+  dns_servers     = ["172.28.0.1"]
+
+  pci_pass_intel_igpu = {
+    name  = "intel-igpu"
+    label = "net.tk831.dev/intel-igpu-enabled"
   }
+  pci_pass_coral = {
+    name  = "coral-pcie"
+    label = "net.tk831.dev/coral-pci-enabled"
+  }
+
+  host_cluster_name = "red-squadron"
+  host_nodes = {
+    "red-one" = {}
+  }
+
+  talos_nodes = {
+    "red-one-talos" = {
+      host_node_name = "red-one"
+      vm_id          = 101
+      node_ip        = "172.28.2.11"
+      bootstrap      = true
+      role           = "controlplane"
+      cpu            = 8
+      memory         = 32768
+      disk           = 256
+      pci_passes     = [local.pci_pass_intel_igpu, local.pci_pass_coral]
+    },
+    "red-one-talos-worker-one" = {
+      host_node_name = "red-one"
+      vm_id          = 102
+      node_ip        = "172.28.2.15"
+      bootstrap      = false
+      role           = "worker"
+      cpu            = 8
+      memory         = 8192
+      disk           = 256
+      pci_passes     = []
+    },
+    "red-one-talos-worker-two" = {
+      host_node_name = "red-one"
+      vm_id          = 103
+      node_ip        = "172.28.2.16"
+      bootstrap      = false
+      role           = "worker"
+      cpu            = 8
+      memory         = 8192
+      disk           = 256
+      pci_passes     = []
+    }
+  }
+
+  deploy_bootstrap_manifests = false
 }
 
 data "talos_image_factory_extensions_versions" "red_squadron" {
@@ -43,9 +96,10 @@ data "talos_image_factory_urls" "red_squadron" {
 }
 
 resource "proxmox_virtual_environment_download_file" "talos_iso" {
+  for_each     = local.host_nodes
   content_type = "iso"
   datastore_id = "local"
-  node_name    = "red-one"
+  node_name    = each.key
   file_name    = "talos-nocloud-amd64.iso"
 
   url = data.talos_image_factory_urls.red_squadron.urls.iso
@@ -53,7 +107,7 @@ resource "proxmox_virtual_environment_download_file" "talos_iso" {
 
 resource "proxmox_virtual_environment_hardware_mapping_pci" "red_squadron_igpu" {
   comment = "Mapping for Intel integrated GPU"
-  name    = "intel-igpu"
+  name    = local.pci_pass_intel_igpu.name
   map = [
     {
       id           = "8086:46a3"
@@ -67,7 +121,7 @@ resource "proxmox_virtual_environment_hardware_mapping_pci" "red_squadron_igpu" 
 
 resource "proxmox_virtual_environment_hardware_mapping_pci" "red_squadron_coral" {
   comment = "Mapping for Google Coral PCIe Accelerator"
-  name    = "coral-pcie"
+  name    = local.pci_pass_coral.name
   map = [
     {
       id           = "1ac1:089a"
@@ -79,229 +133,60 @@ resource "proxmox_virtual_environment_hardware_mapping_pci" "red_squadron_coral"
   ]
 }
 
-resource "proxmox_virtual_environment_vm" "red_one_talos" {
-  name = "red-one-talos"
-  tags = ["kubernetes", "talos", "terraform"]
-
-  node_name = "red-one"
-  vm_id     = 101
-
-  machine       = "q35"
-  scsi_hardware = "virtio-scsi-single"
-
-  boot_order = ["scsi0", "ide0", "net0"]
-
-  agent {
-    enabled = true
-  }
-
-  cpu {
-    cores = 8
-    type  = "x86-64-v2-AES"
-  }
-
-  memory {
-    dedicated = 32768
-    floating  = 32768
-  }
-
-  network_device {
-    bridge = "vmbr0"
-  }
-
-  operating_system {
-    type = "l26"
-  }
-
-  cdrom {
-    interface = "ide0"
-    file_id   = proxmox_virtual_environment_download_file.talos_iso.id
-  }
-
-  hostpci {
-    device  = "hostpci0"
-    mapping = proxmox_virtual_environment_hardware_mapping_pci.red_squadron_igpu.name
-    pcie    = true
-  }
-
-  hostpci {
-    device  = "hostpci1"
-    mapping = proxmox_virtual_environment_hardware_mapping_pci.red_squadron_coral.name
-  }
-
-  disk {
-    serial       = local.talos_one.root_disk_serial
-    datastore_id = "local-zfs"
-    interface    = "scsi0"
-    size         = 256
-    backup       = true
-    replicate    = true
-    ssd          = true
-    discard      = "on"
-  }
-
-  initialization {
-    datastore_id = "local-zfs"
-    interface    = "ide2"
-    dns {
-      servers = ["172.28.0.1"]
-    }
-    ip_config {
-      ipv4 {
-        address = "${local.talos_one.ip}/22"
-        gateway = "172.28.0.1"
-      }
-    }
-  }
-}
-
 resource "talos_machine_secrets" "red_squadron_talos" {}
 
-data "talos_machine_configuration" "red_squadron_talos_one" {
-  cluster_name     = "red-squadron-talos"
-  machine_type     = "controlplane"
-  cluster_endpoint = "https://${local.talos_cluster_vip}:6443"
-  machine_secrets  = talos_machine_secrets.red_squadron_talos.machine_secrets
-}
-
-resource "talos_machine_configuration_apply" "red_squadron_talos_one" {
-  depends_on = [proxmox_virtual_environment_vm.red_one_talos]
-
-  client_configuration        = talos_machine_secrets.red_squadron_talos.client_configuration
-  machine_configuration_input = data.talos_machine_configuration.red_squadron_talos_one.machine_configuration
-  node                        = local.talos_one.ip
-  config_patches = [
-    yamlencode({
-      machine = {
-        install = {
-          image = data.talos_image_factory_urls.red_squadron.urls.installer
-          disk  = "/dev/sda"
-        }
-        kernel = {
-          modules = [{ name = "iptable_mangle" }, { name = "tun" }]
-        }
-        sysctls = {
-          "net.ipv4.conf.all.src_valid_mark" = "1"
-        }
-        kubelet = {
-          extraArgs = {
-            rotate-server-certificates = true
-          }
-        }
-        network = {
-          interfaces = [{
-            interface = "eth0"
-            dhcp      = false
-            addresses = ["${local.talos_one.ip}/22"]
-            vip = {
-              ip = local.talos_cluster_vip
-            }
-            routes = [{
-              network = "0.0.0.0/0"
-              gateway = "172.28.0.1"
-            }]
-          }]
-        }
-        nodeLabels = {
-          "topology.kubernetes.io/region" = "red-squadron"
-          "topology.kubernetes.io/zone"   = "red-one"
-          "node.kubernetes.io/exclude-from-external-load-balancers" = {
-            "$patch" = "delete"
-          }
-        }
-        features = {
-          hostDNS = {
-            forwardKubeDNSToHost = false
-          }
-        }
-        logging = {
-          destinations = [{
-            endpoint = "udp://vector-server.willtaylor.info:6051/"
-            format   = "json_lines"
-          }]
-        }
-      }
-      cluster = {
-        allowSchedulingOnControlPlanes = true
-        network = {
-          cni = {
-            name = "none"
-          }
-        }
-        proxy = {
-          disabled = true
-        }
-        apiServer = {
-          certSANs = ["red-squadron-talos.willtaylor.info"]
-        }
-        extraManifests = [
-          "https://raw.githubusercontent.com/alex1989hu/kubelet-serving-cert-approver/refs/tags/v0.9.1/deploy/standalone-install.yaml",
-          "https://raw.githubusercontent.com/wtaylor/device-config/refs/heads/main/kubernetes/bootstrap-utils/red-squadron-talos-argocd-rendered.yaml"
-        ]
-        inlineManifests = [
-          {
-            name     = "cilium-install-job"
-            contents = file("${path.module}/files/cilium-install-job.yaml")
-          },
-          {
-            name     = "argocd-namespace"
-            contents = <<EOF
-            apiVersion: v1
-            kind: Namespace
-            metadata:
-              name: argocd
-            EOF
-          }
-        ]
-      }
-    })
-  ]
-}
-
-resource "talos_machine_bootstrap" "red_squadron_talos_one" {
-  depends_on = [
-    talos_machine_configuration_apply.red_squadron_talos_one
-  ]
-  node                 = local.talos_one.ip
-  client_configuration = talos_machine_secrets.red_squadron_talos.client_configuration
-}
-
 data "talos_client_configuration" "red_squadron_talos" {
-  cluster_name         = "red-squadron-talos"
+  cluster_name         = local.cluster_name
   client_configuration = talos_machine_secrets.red_squadron_talos.client_configuration
-  nodes                = [local.talos_one.ip]
-  endpoints            = [local.talos_one.ip]
+  nodes                = [local.talos_nodes["red-one-talos"].node_ip]
+  endpoints            = [local.talos_nodes["red-one-talos"].node_ip]
+}
+
+module "talos_nodes" {
+  source   = "../../modules/talos-node"
+  for_each = local.talos_nodes
+
+  vm_host_cluster_name = local.host_cluster_name
+  vm_host_node_name    = each.value.host_node_name
+  vm_id                = each.value.vm_id
+  node_name            = each.key
+  vm_tags              = [each.value.role, "kubernetes", "talos", "terraform"]
+  vm_cpu_cores         = each.value.cpu
+  vm_memory            = each.value.memory
+  vm_root_disk_size    = each.value.disk
+
+  vm_installer_cdrom_file_id = proxmox_virtual_environment_download_file.talos_iso[each.value.host_node_name].id
+
+  vm_host_pci_mapping_names          = each.value.pci_passes
+  node_talos_oci_installer_image_url = data.talos_image_factory_urls.red_squadron.urls.installer
+
+  node_ip              = each.value.node_ip
+  node_default_gateway = local.default_gateway
+  node_dns_servers     = local.dns_servers
+
+  node_labels = { for p in each.value.pci_passes : p.label => "true" }
+
+  node_deploy_bootstrap_manifests         = each.value.bootstrap && local.deploy_bootstrap_manifests
+  node_talos_secrets_machine_secrets      = talos_machine_secrets.red_squadron_talos.machine_secrets
+  node_talos_secrets_client_configuration = talos_machine_secrets.red_squadron_talos.client_configuration
+  node_role                               = each.value.role
+  node_enable_scheduling_on_controlplanes = true
+
+  cluster_name = local.cluster_name
+  cluster_vip  = local.cluster_vip
+
+  node_execute_talos_bootstrap = each.value.bootstrap
 }
 
 resource "talos_cluster_kubeconfig" "red_squadron_talos" {
-  depends_on           = [talos_machine_bootstrap.red_squadron_talos_one]
+  depends_on           = [module.talos_nodes["red-one-talos"]]
   client_configuration = talos_machine_secrets.red_squadron_talos.client_configuration
-  node                 = local.talos_one.ip
-}
-
-output "talos_client_config" {
-  sensitive = true
-  value     = data.talos_client_configuration.red_squadron_talos.talos_config
-}
-
-output "kubeconfig" {
-  sensitive = true
-  value     = talos_cluster_kubeconfig.red_squadron_talos.kubeconfig_raw
-}
-
-resource "time_sleep" "kubernetes_ready" {
-  depends_on = [
-    talos_machine_bootstrap.red_squadron_talos_one
-  ]
-  create_duration = "60s"
+  node                 = local.talos_nodes["red-one-talos"].node_ip
 }
 
 module "vault_auth" {
-  source = "../../modules/k8s-vault-auth"
-  depends_on = [
-    talos_machine_bootstrap.red_squadron_talos_one,
-    time_sleep.kubernetes_ready
-  ]
+  source     = "../../modules/k8s-vault-auth"
+  depends_on = [module.talos_nodes["red-one-talos"]]
 
   create_namespace                  = true
   namespace                         = "external-secrets"
@@ -355,8 +240,7 @@ module "argocd-bootstrap" {
   bootstrap_mode = "system"
 
   depends_on = [
-    talos_machine_bootstrap.red_squadron_talos_one,
-    vault_kv_secret_v2.csi_credentials,
-    time_sleep.kubernetes_ready
+    module.talos_nodes["red-one-talos"],
+    vault_kv_secret_v2.csi_credentials
   ]
 }
