@@ -11,7 +11,7 @@ helmCharts:
         default-ssl-certificate: "kube-system/default-cluster-gateway-tls-certificates"
       service:
         loadBalancerIP: "172.28.3.133"
-        externalTrafficPolicy: Local
+        externalTrafficPolicy: Cluster
       metrics:
         enabled: true
       podAnnotations:

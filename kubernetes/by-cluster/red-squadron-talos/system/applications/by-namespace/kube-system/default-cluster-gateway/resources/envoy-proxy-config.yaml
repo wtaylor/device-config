@@ -7,5 +7,6 @@ spec:
     type: Kubernetes
     kubernetes:
       envoyService:
+        externalTrafficPolicy: Cluster
         annotations:
           lbipam.cilium.io/ips: "172.28.3.128"

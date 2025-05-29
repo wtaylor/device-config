@@ -28,4 +28,5 @@ spec:
     port: 3539
     targetPort: 3539
   type: LoadBalancer
+  externalTrafficPolicy: Cluster
   loadBalancerIP: "172.28.3.129"
