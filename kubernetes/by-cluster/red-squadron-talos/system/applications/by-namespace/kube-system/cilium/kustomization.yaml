@@ -41,7 +41,7 @@ helmCharts:
     # ipv4NativeRoutingCIDR: 10.244.0.0/16
     k8s:
       requireIpv4PodCIDR: true
-    installNoConntrackIptablesRules: true
+    # installNoConntrackIptablesRules: true
     localRedirectPolicy: true
     bgpControlPlane:
       enabled: false
