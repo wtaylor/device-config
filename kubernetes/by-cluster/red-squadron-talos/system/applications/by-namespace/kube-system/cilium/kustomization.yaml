@@ -8,6 +8,7 @@ helmCharts:
   namespace: kube-system
   version: "1.17.4"
   valuesInline:
+    rollOutCiliumPods: true
     ipam:
       mode: kubernetes
     kubeProxyReplacement: true
@@ -26,17 +27,24 @@ helmCharts:
         enabled: true
     operator:
       replicas: 1
-    routingMode: native
-    autoDirectNodeRoutes: true
+    # Native routing and L2 Announce incompatible, affects all config down to and including loadbalancer:
+    # https://github.com/cilium/cilium/issues/27800
+    routingMode: tunnel
+    tunnelProtocol: geneve
+    # routingMode: native
+    # autoDirectNodeRoutes: true
+    loadbalancer:
+      mode: dsr
+      dsrDispatch: geneve
     bpf:
       masquerade: true
-    ipv4NativeRoutingCIDR: 10.244.0.0/16
+    # ipv4NativeRoutingCIDR: 10.244.0.0/16
     k8s:
       requireIpv4PodCIDR: true
     installNoConntrackIptablesRules: true
     localRedirectPolicy: true
     bgpControlPlane:
-      enabled: true
+      enabled: false
     l2announcements:
       enabled: true
       leaseDuration: 15s
