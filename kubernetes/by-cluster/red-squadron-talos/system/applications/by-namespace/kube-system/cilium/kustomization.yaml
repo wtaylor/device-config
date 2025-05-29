@@ -57,7 +57,7 @@ helmCharts:
       enabled: true
       enableAlpn: true
       gatewayClass:
-        create: true
+        create: "true"
     k8sClientRateLimit:
       qps: 1200
       burst: 1800
