@@ -50,9 +50,14 @@ helmCharts:
       leaseDuration: 15s
       leaseRenewDeadline: 5s
       leaseRetryPeriod: 2s
-    l7proxy: false
+    l7proxy: true
     envoy:
-      enabled: false
+      enabled: true
+    gatewayAPI:
+      enabled: true
+      enableAlpn: true
+      gatewayClass:
+        create: true
     k8sClientRateLimit:
       qps: 1200
       burst: 1800
@@ -63,3 +68,4 @@ resources:
 # - resources/bgp.yaml
 - resources/l2-lb-ip-pool.yaml
 - resources/l2-policy.yaml
+- resources/gateway.yaml

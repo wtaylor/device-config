@@ -1,0 +1,19 @@
+apiVersion: gateway.networking.k8s.io/v1
+kind: Gateway
+metadata:
+  name: my-gateway
+spec:
+  gatewayClassName: cilium
+  infrastructure:
+    annotations:
+      io.cilium/lb-ipam-ips: "172.28.3.136"
+  addresses:
+  - type: IPAddress
+    value: 172.28.3.136
+  listeners:
+  - allowedRoutes:
+      namespaces:
+        from: Same
+    name: web-gw
+    port: 80
+    protocol: HTTP
