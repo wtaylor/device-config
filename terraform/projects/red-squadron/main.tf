@@ -29,9 +29,9 @@ locals {
       bootstrap      = true
       role           = "controlplane"
       cpu            = 8
-      memory         = 32768
+      memory         = 8192
       disk           = 256
-      pci_passes     = [local.pci_pass_intel_igpu, local.pci_pass_coral]
+      pci_passes     = []
     },
     "red-one-talos-worker-one" = {
       host_node_name = "red-one"
@@ -40,7 +40,7 @@ locals {
       bootstrap      = false
       role           = "worker"
       cpu            = 8
-      memory         = 8192
+      memory         = 24576
       disk           = 256
       pci_passes     = []
     },
@@ -51,9 +51,9 @@ locals {
       bootstrap      = false
       role           = "worker"
       cpu            = 8
-      memory         = 8192
+      memory         = 24576
       disk           = 256
-      pci_passes     = []
+      pci_passes     = [local.pci_pass_intel_igpu, local.pci_pass_coral]
     }
   }
 
@@ -164,13 +164,13 @@ module "talos_nodes" {
   node_default_gateway = local.default_gateway
   node_dns_servers     = local.dns_servers
 
-  node_labels = { for p in each.value.pci_passes : p.label => "true" }
+  node_labels = { for p in each.value.pci_passes : p.label => "" }
 
   node_deploy_bootstrap_manifests         = each.value.bootstrap && local.deploy_bootstrap_manifests
   node_talos_secrets_machine_secrets      = talos_machine_secrets.red_squadron_talos.machine_secrets
   node_talos_secrets_client_configuration = talos_machine_secrets.red_squadron_talos.client_configuration
   node_role                               = each.value.role
-  node_enable_scheduling_on_controlplanes = true
+  node_enable_scheduling_on_controlplanes = false
 
   cluster_name = local.cluster_name
   cluster_vip  = local.cluster_vip
