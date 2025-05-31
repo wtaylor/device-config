@@ -9,10 +9,9 @@ helmCharts:
   repo: https://mariadb-operator.github.io/mariadb-operator
   version: "0.38.1"
   valuesInline:
-    extraArgs:
-      metrics:
-        enabled: false
-      webhook:
-        cert:
-          certManager:
-            enabled: true
+    metrics:
+      enabled: false
+    webhook:
+      cert:
+        certManager:
+          enabled: true
