@@ -1,11 +1,13 @@
 helmCharts:
 - releaseName: mariadb-operator-crds
   name: mariadb-operator-crds
+  namespace: mariadb-system
   repo: https://mariadb-operator.github.io/mariadb-operator
   version: "0.38.1"
   includeCRDs: true
 - releaseName: mariadb-operator
   name: mariadb-operator
+  namespace: mariadb-system
   repo: https://mariadb-operator.github.io/mariadb-operator
   version: "0.38.1"
   valuesInline:
