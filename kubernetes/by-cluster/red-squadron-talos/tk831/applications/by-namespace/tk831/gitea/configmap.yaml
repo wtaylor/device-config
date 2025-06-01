@@ -33,8 +33,6 @@ data:
     DB_TYPE  = postgres
     HOST     = postgres-tk831-default-rw:5432
     NAME     = gitea
-    USER     = docker
-    PASSWD   = docker
     SSL_MODE = disable
 
     [session]

@@ -21,6 +21,22 @@ spec:
   bootstrap:
     recovery:
       source: postgres-default
+  managed:
+    roles:
+    - name: gitea
+      ensure: present
+      comment: Gitea app user
+      superuser: false
+      login: true
+      passwordSecret:
+        name: postgres-tk831-default-user-gitea
+    - name: keycloak
+      ensure: present
+      comment: Keycloak app user
+      superuser: false
+      login: true
+      passwordSecret:
+        name: postgres-tk831-default-user-keycloak
   externalClusters:
   - name: postgres-default
     barmanObjectStore:

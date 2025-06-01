@@ -48,6 +48,16 @@ spec:
         env:
         - name: TZ
           value: Europe/London
+        - name: GITEA__database__USER
+          valueFrom:
+            secretKeyRef:
+              name: gitea-postgres-credentials
+              key: username
+        - name: GITEA__database__PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: gitea-postgres-credentials
+              key: password
         ports:
         - containerPort: 3000
           name: http
