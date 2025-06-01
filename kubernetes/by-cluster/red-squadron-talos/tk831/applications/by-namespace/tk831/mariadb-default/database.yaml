@@ -1,0 +1,52 @@
+apiVersion: k8s.mariadb.com/v1alpha1
+kind: MariaDB
+metadata:
+  name: mariadb-tk831-default
+spec:
+  image: mariadb:11.0.3
+  imagePullPolicy: IfNotPresent
+  storage:
+    storageClassName: proxmox-zfs
+    size: 10Gi
+  rootPasswordSecretKeyRef:
+    name: dbc-mariadb-default-credentials
+    key: root-password
+  database: mariadb
+  username: mariadb
+  passwordSecretKeyRef:
+    name: dbc-mariadb-default-credentials
+    key: root-password
+  port: 3306
+  volumes:
+  - name: tmp
+    emptyDir: {}
+  volumeMounts:
+  - name: tmp
+    mountPath: /tmp
+  myCnf: |
+    [mariadb]
+    bind-address=*
+    default_storage_engine=InnoDB
+    binlog_format=row
+    innodb_autoinc_lock_mode=2
+    max_allowed_packet=256M
+  bootstrapFrom:
+    s3:
+      bucket: ssd-csi-s3-volumes
+      prefix: pvc-ab4aa860-12bf-42bf-a20a-1efcb093ba35
+      endpoint: s3.willtaylor.info
+      accessKeyIdSecretKeyRef:
+        name: dbc-mariadb-default-temp-s3-credentials
+        key: access-key-id
+      secretAccessKeySecretKeyRef:
+        name: dbc-mariadb-default-temp-s3-credentials
+        key: secret-access-key
+      tls:
+        enabled: true
+  resources:
+    requests:
+      cpu: 100m
+      memory: 128Mi
+    limits:
+      cpu: 300m
+      memory: 512Mi
