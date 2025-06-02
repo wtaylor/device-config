@@ -37,6 +37,20 @@ spec:
       login: true
       passwordSecret:
         name: postgres-tk831-default-role-keycloak
+    - name: nextcloud
+      ensure: present
+      comment: Nextcloud app user
+      superuser: false
+      login: true
+      passwordSecret:
+        name: postgres-tk831-default-role-nextcloud
+    - name: paperless
+      ensure: present
+      comment: Paperless app user
+      superuser: false
+      login: true
+      passwordSecret:
+        name: postgres-tk831-default-role-paperless
   externalClusters:
   - name: postgres-default
     barmanObjectStore:
