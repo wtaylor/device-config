@@ -31,10 +31,29 @@ spec:
           claimName: gitea-ssh-pvc
       initContainers:
       - name: copy-app-ini
-        image: busybox
+        image: debian:bookworm-slim
         command: ["/bin/sh", "-c"]
-        args:
-        - echo Initialising config; mkdir -p /data/gitea/conf; cp /conf/app.ini /data/gitea/conf/app.ini; echo \### CONFIG \###; cat /data/gitea/conf/app.ini; echo \### END CONFIG \###; chmod -R 777 /data/gitea/conf;
+        env:
+        - name: GITEA__database__USER
+          valueFrom:
+            secretKeyRef:
+              name: gitea-postgres-credentials
+              key: username
+        - name: GITEA__database__PASSWD
+          valueFrom:
+            secretKeyRef:
+              name: gitea-postgres-credentials
+              key: password
+        args: |
+          echo Initialising config
+          mkdir -p /data/gitea/conf
+          cp /conf/app.ini /data/gitea/conf/app.ini
+          echo "### CONFIG ###"
+          cat /data/gitea/conf/app.ini
+          echo "### END CONFIG ###"
+          echo "Injecting secrets"
+          perl -pe 's/%%([A-Za-z_][A-Za-z0-9_]*)%%/$ENV{$1} || ""/ge' /data/gitea/conf/app.ini
+          chmod -R 777 /data/gitea/conf
         volumeMounts:
         - name: gitea-config
           mountPath: /conf/app.ini
@@ -48,16 +67,6 @@ spec:
         env:
         - name: TZ
           value: Europe/London
-        - name: GITEA__database__USER
-          valueFrom:
-            secretKeyRef:
-              name: gitea-postgres-credentials
-              key: username
-        - name: GITEA__database__PASSWD
-          valueFrom:
-            secretKeyRef:
-              name: gitea-postgres-credentials
-              key: password
         ports:
         - containerPort: 3000
           name: http
