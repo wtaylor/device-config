@@ -53,7 +53,7 @@ spec:
           cat /data/gitea/conf/app.ini
           echo "### END CONFIG ###"
           echo "Injecting secrets"
-          perl -pi 's/%%([A-Za-z_][A-Za-z0-9_]*)%%/$ENV{$1} || ""/ge' /data/gitea/conf/app.ini
+          perl -pi -e 's/%%([A-Za-z_][A-Za-z0-9_]*)%%/$ENV{$1} || ""/ge' /data/gitea/conf/app.ini
           chmod -R 777 /data/gitea/conf
         volumeMounts:
         - name: gitea-config
