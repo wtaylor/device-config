@@ -29,14 +29,14 @@ spec:
       superuser: false
       login: true
       passwordSecret:
-        name: postgres-tk831-default-user-gitea
+        name: postgres-tk831-default-role-gitea
     - name: keycloak
       ensure: present
       comment: Keycloak app user
       superuser: false
       login: true
       passwordSecret:
-        name: postgres-tk831-default-user-keycloak
+        name: postgres-tk831-default-role-keycloak
   externalClusters:
   - name: postgres-default
     barmanObjectStore:
