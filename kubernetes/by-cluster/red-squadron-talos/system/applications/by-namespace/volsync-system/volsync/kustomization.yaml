@@ -1,0 +1,7 @@
+helmCharts:
+- releaseName: volsync
+  name: volsync
+  namespace: volsync-system
+  repo: https://backube.github.io/helm-charts/
+  version: "v0.12.1"
+  includeCRDs: true
