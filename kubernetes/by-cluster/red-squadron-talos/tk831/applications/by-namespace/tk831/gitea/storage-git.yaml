@@ -53,7 +53,7 @@ spec:
   sourcePVC: gitea-git-pvc
   trigger:
     # Take a backup every night at 4am
-    schedule: "37 8 * * *"
+    schedule: "00 4 * * *"
   restic:
     copyMethod: Direct
     pruneIntervalDays: 7
