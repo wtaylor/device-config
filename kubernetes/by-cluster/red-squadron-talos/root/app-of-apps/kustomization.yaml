@@ -3,5 +3,7 @@ resources:
 - projects/system/application.yaml
 - projects/tk831/project.yaml
 - projects/tk831/application.yaml
+- projects/tk831/namespace.yaml
 - projects/blunge/project.yaml
 - projects/blunge/application.yaml
+- projects/blunge/namespace.yaml
