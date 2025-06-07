@@ -1,0 +1,66 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: blungebot-data-pvc-volsync-restic-config
+spec:
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  refreshInterval: 60m
+  target:
+    template:
+      type: kubernetes.io/Opaque
+      data:
+        RESTIC_REPOSITORY: s3:https://s3.willtaylor.info/ssd-backup-volsync/blungebot-data-pvc
+        RESTIC_PASSWORD: "{{ .restic_password }}"
+        AWS_ACCESS_KEY_ID: "{{ .access_key }}"
+        AWS_SECRET_ACCESS_KEY: "{{ .secret_key }}"
+    deletionPolicy: Delete
+  data:
+  - secretKey: access_key
+    remoteRef:
+      key: kv/services/volsync/s3-credentials
+      property: access_key
+  - secretKey: secret_key
+    remoteRef:
+      key: kv/services/volsync/s3-credentials
+      property: secret_key
+  - secretKey: restic_password
+    remoteRef:
+      key: kv/services/volsync/restic-credentials
+      property: password
+---
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: blungebot-data-pvc
+  labels:
+    app.kubernetes.io/name: blungebot
+spec:
+  storageClassName: proxmox-zfs
+  volumeName: pvc-dc8db105-227d-476f-8078-30570fc40d67
+  accessModes:
+  - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+---
+apiVersion: volsync.backube/v1alpha1
+kind: ReplicationSource
+metadata:
+  name: blungebot-data-pvc
+spec:
+  sourcePVC: blungebot-data-pvc
+  trigger:
+    # Take a backup every night at 4am
+    schedule: "00 4 * * *"
+  restic:
+    copyMethod: Direct
+    pruneIntervalDays: 7
+    repository: blungebot-data-pvc-volsync-restic-config
+    retain:
+      hourly: 1
+      daily: 7
+      weekly: 2
+      monthly: 2
+      yearly: 0

@@ -1,12 +1,11 @@
 apiVersion: apps/v1
-kind: StatefulSet
+kind: Deployment
 metadata:
   name: blungebot
   labels:
     app.kubernetes.io/name: blungebot
 spec:
   replicas: 1
-  serviceName: blungebot
   selector:
     matchLabels:
       app.kubernetes.io/name: blungebot
@@ -14,8 +13,6 @@ spec:
     metadata:
       labels:
         app.kubernetes.io/name: blungebot
-      annotations:
-        backup.velero.io/backup-volumes: data
     spec:
       securityContext:
         runAsUser: 1001
@@ -52,14 +49,6 @@ spec:
       - name: config
         configMap:
           name: blungebot-cm
-  volumeClaimTemplates:
-  - apiVersion: v1
-    kind: PersistentVolumeClaim
-    metadata:
-      name: data
-    spec:
-      accessModes: ["ReadWriteOnce"]
-      storageClassName: proxmox-zfs
-      resources:
-        requests:
-          storage: 1Gi
+      - name: data
+        persistentVolumeClaim:
+          claimName: blungebot-data-pvc
