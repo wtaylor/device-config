@@ -19,8 +19,6 @@ spec:
         repoURL: https://gitea.tk831.net/Ops/media-app-of-apps.git
         targetRevision: HEAD
         path: '{{.path.path}}'
-        directory:
-          recurse: true
       destination:
         server: https://kubernetes.default.svc
         namespace: '{{index .path.segments 4}}'
