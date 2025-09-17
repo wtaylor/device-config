@@ -2,8 +2,11 @@ resources:
 - projects/system/project.yaml
 - projects/system/application.yaml
 - projects/tk831/project.yaml
-- projects/tk831/application.yaml
 - projects/tk831/namespace.yaml
+- projects/tk831/application.yaml
 - projects/blunge/project.yaml
-- projects/blunge/application.yaml
 - projects/blunge/namespace.yaml
+- projects/blunge/application.yaml
+- projects/w7x6t/project.yaml
+- projects/w7x6t/namespace.yaml
+- projects/w7x6t/application.yaml
