@@ -2,5 +2,25 @@ resources:
 - https://raw.githubusercontent.com/sergelogvinov/proxmox-csi-plugin/v0.13.0/docs/deploy/proxmox-csi-plugin-release.yml
 - resources/cluster-config-secret.yaml
 - resources/storage-class.yaml
+patches:
+- patch: |
+    apiVersion: apps/v1
+    kind: DaemonSet
+    metadata:
+      name: proxmox-csi-plugin-node
+      namespace: csi-proxmox
+    spec:
+      template:
+        spec:
+          tolerations:
+          - effect: NoSchedule
+            key: node-role.kubernetes.io/control-plane
+            operator: Exists
+          - effect: NoSchedule
+            key: node.kubernetes.io/unschedulable
+            operator: Exists
+          - effect: NoSchedule
+            key: node.kubernetes.io/disk-pressure
+            operator: Exists
 ## Disabled as feature gate not enabled
 # - resources/backup-vac.yaml 
