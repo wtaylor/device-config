@@ -1,5 +1,5 @@
 resources:
-- https://raw.githubusercontent.com/sergelogvinov/proxmox-csi-plugin/v0.13.0/docs/deploy/proxmox-csi-plugin-release.yml
+- https://raw.githubusercontent.com/sergelogvinov/proxmox-csi-plugin/v0.17.0/docs/deploy/proxmox-csi-plugin-release.yml
 - resources/cluster-config-secret.yaml
 - resources/storage-class.yaml
 patches:
