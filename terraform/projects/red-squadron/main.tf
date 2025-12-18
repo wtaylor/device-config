@@ -28,7 +28,7 @@ locals {
       node_ip        = "172.28.2.11"
       bootstrap      = true
       role           = "controlplane"
-      cpu            = 8
+      cpu            = 4
       memory         = 8192
       disk           = 256
       pci_passes     = []
@@ -39,8 +39,8 @@ locals {
       node_ip        = "172.28.2.15"
       bootstrap      = false
       role           = "worker"
-      cpu            = 8
-      memory         = 24576
+      cpu            = 6
+      memory         = 16384
       disk           = 256
       pci_passes     = []
     },
@@ -50,11 +50,23 @@ locals {
       node_ip        = "172.28.2.16"
       bootstrap      = false
       role           = "worker"
-      cpu            = 8
-      memory         = 24576
+      cpu            = 6
+      memory         = 16384
       disk           = 256
       pci_passes     = [local.pci_pass_intel_igpu, local.pci_pass_coral]
-    }
+    },
+    "red-one-talos-worker-three" = {
+      host_node_name = "red-one"
+      vm_id          = 104
+      node_ip        = "172.28.2.17"
+      bootstrap      = false
+      role           = "worker"
+      cpu            = 6
+      memory         = 16384
+      disk           = 256
+      pci_passes     = []
+    },
+
   }
 
   deploy_bootstrap_manifests = false
