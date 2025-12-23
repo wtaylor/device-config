@@ -1,7 +1,9 @@
 [tools]
 argocd = "2.13.3"
+opentofu = "1.11.1"
 python = { version = "3.13.1", virtualenv = ".venv" }
 terraform = "1.11.4"
+terragrunt = "0.96.1"
 uv = "0.5.11"
 vault = "1.18.3"
 velero = "1.14.0"

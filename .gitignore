@@ -4,3 +4,4 @@ terraform.tfstate.backup
 02-secrets.bashrc
 **/*.tfstate
 **/charts
+tg_*.tf
