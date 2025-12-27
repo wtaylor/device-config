@@ -1,0 +1,8 @@
+- name: Create user
+  ansible.builtin.user:
+    name: "{{ username }}"
+    shell: /bin/bash
+    groups: [sudo]
+    append: true
+    password: "{{ password | password_hash('sha512', salt) }}"
+    update_password: on_create

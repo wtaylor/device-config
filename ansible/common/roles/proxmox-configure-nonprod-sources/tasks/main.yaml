@@ -1,7 +1,8 @@
-- name: Ensure pve-enterprise repository does not exist
+- name: Ensure pve enterprise repositories do not exist
   become: true
   loop:
   - pve-enterprise.list
+  - pve-enterprise.sources
   - ceph.list
   file:
     path: "/etc/apt/sources.list.d/{{ item }}"
@@ -10,9 +11,9 @@
   become: true
   loop:
   - name: pve-no-subscription.list
-    content: deb http://download.proxmox.com/debian/pve bookworm pve-no-subscription
+    content: "deb http://download.proxmox.com/debian/pve {{ ansible_facts['distribution_release'] }} pve-no-subscription"
   - name: ceph-no-subscription.list
-    content: deb http://download.proxmox.com/debian/ceph-squid bookworm no-subscription
+    content: "deb http://download.proxmox.com/debian/ceph-squid {{ ansible_facts['distribution_release'] }} no-subscription"
   copy:
     dest: /etc/apt/sources.list.d/{{ item.name }}
     owner: root

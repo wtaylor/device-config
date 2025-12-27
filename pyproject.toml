@@ -8,6 +8,7 @@ dependencies = [
     "ansible-lint>=25.4.0",
     "ansible>=11.1.0",
     "hvac>=2.3.0",
+    "passlib>=1.7.4",
 ]
 [tool.uv]
 environments = ["platform_system != 'Windows'"]
