@@ -1,0 +1,37 @@
+- name: Disable ipv6 in postfix configuration
+  become: true
+  ansible.builtin.lineinfile:
+    path: /etc/postfix/main.cf
+    line: "inet_protocols = ipv4"
+  register: postfix_config
+- name: Start/restart postfix
+  become: true
+  systemd:
+    name: postfix
+    enabled: true
+    state: "{{ 'restarted' if postfix_config.changed else 'started' }}"
+- name: Configure notifications.cfg
+  become: true
+  ansible.builtin.template:
+    src: templates/notifications.cfg.j2
+    dest: /root/notifications.cfg
+    unsafe_writes: true
+    owner: root
+    group: root
+    mode: '0640'
+- name: Set notification secrets
+  become: true
+  ansible.builtin.template:
+    src: templates/priv.notifications.cfg.j2
+    dest: /root/priv.notifications.cfg
+    owner: root
+    group: root
+    mode: '0600'
+- name: Replace live priv/notifications.cgf
+  become: true
+  shell: cat /root/priv.notifications.cfg > /etc/pve/priv/notifications.cfg
+  changed_when: false
+- name: Replace live notifications.cgf
+  become: true
+  shell: cat /root/notifications.cfg > /etc/pve/notifications.cfg
+  changed_when: false

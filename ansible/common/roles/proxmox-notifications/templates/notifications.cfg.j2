@@ -1,0 +1,25 @@
+smtp: {{ mailer_name }}
+        author {{ author }}
+        from-address {{ from_address }}
+{% for user in mailto_users %}
+        mailto-user {{ user }}
+{% endfor %}
+        mode {{ mode }} 
+        server {{ smtp_server }}
+        username {{ smtp_username }}
+
+matcher: {{ matcher_name }}
+        comment Route all notifications to {{ mailer_name }}. Managed by Ansible.
+        mode all
+        target {{ mailer_name }}
+
+matcher: default-matcher
+        comment Route all notifications to mail-to-root
+        disable true
+        mode all
+        target mail-to-root
+
+sendmail: mail-to-root
+        comment Send mails to root@pam's email address
+        disable true
+        mailto-user root@pam

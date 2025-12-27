@@ -9,3 +9,13 @@
     password: "{{(lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/wtaylor-proxmox-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
     salt: "{{(lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/wtaylor-proxmox-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.salt }}"
   - role: ./roles/proxmox-enable-vfio
+  - role: ../../common/roles/proxmox-notifications
+    mailer_name: admin-mail
+    matcher_name: admin-matcher
+    author: Proxmox VE - Red Squadron
+    from_address: system@tk831.net
+    mailto_users: [wtaylor@pam]
+    mode: starttls
+    smtp_server: smtp.protonmail.ch
+    smtp_username: "{{(lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/protonmail-smtp-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+    smtp_password: "{{(lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/protonmail-smtp-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
