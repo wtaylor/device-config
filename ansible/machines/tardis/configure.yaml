@@ -1,12 +1,14 @@
 - hosts: tardis
   remote_user: wtaylor
+  handlers:
+  - import_tasks: ../../common/handlers/global.yaml
   roles:
   - role: ../../common/roles/proxmox-configure-nonprod-sources
+  - role: ../../common/roles/update-system
   - role: ../../common/roles/create-user
     username: wtaylor
     password: "{{(lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/wtaylor-proxmox-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
     salt: "{{(lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/wtaylor-proxmox-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.salt }}"
-  - role: ../../common/roles/update-system
   # - role: ./roles/enable-vfio
   # - role: ./roles/reserve-gpu
   # - role: ./roles/upload-gpu-rom
