@@ -19,7 +19,7 @@ resource "proxmox_virtual_environment_user" "wtaylor" {
   password = data.vault_kv_secret_v2.credentials_wtaylor.data.password
   comment  = "Managed by Terraform"
 
-  email      = "me@willtaylor.info"
+  email      = data.vault_kv_secret_v2.credentials_wtaylor.data.email
   first_name = "William"
   last_name  = "Taylor"
 

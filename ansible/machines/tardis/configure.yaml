@@ -14,7 +14,7 @@
   - role: ../../common/roles/proxmox-notifications
     mailer_name: admin-mail
     matcher_name: admin-matcher
-    author: Proxmox VE - Red Squadron
+    author: Proxmox VE - Tardis
     from_address: system@tk831.net
     mailto_users: [wtaylor@pam]
     mode: starttls
