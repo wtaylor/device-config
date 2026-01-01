@@ -137,6 +137,48 @@ resource "proxmox_virtual_environment_vm" "docker_vm" {
     discard      = "on"
   }
 
+  # SeaweedFS - SSD Volume Data
+  disk {
+    datastore_id = local.ssd_volume_store
+    interface    = "scsi6"
+    serial       = "viscsi-sfs-ssdv-data"
+    size         = 1024
+    backup       = true
+    ssd          = true
+    discard      = "on"
+  }
+
+  # SeaweedFS - HDD Volume Data
+  disk {
+    datastore_id = local.large_volume_store
+    interface    = "scsi7"
+    serial       = "viscsi-sfs-hddv-data"
+    size         = 1024
+    backup       = true
+    ssd          = true
+    discard      = "on"
+  }
+  # SeaweedFS - Metadata
+  disk {
+    datastore_id = local.ssd_volume_store
+    interface    = "scsi8"
+    serial       = "viscsi-sfs-m-data"
+    size         = 64
+    backup       = true
+    ssd          = true
+    discard      = "on"
+  }
+  # OpenBau - Data
+  disk {
+    datastore_id = local.ssd_volume_store
+    interface    = "scsi9"
+    serial       = "viscsi-openbau-data"
+    size         = 16
+    backup       = true
+    ssd          = true
+    discard      = "on"
+  }
+
   initialization {
     datastore_id = local.root_disk_store
     dns {
