@@ -20,15 +20,6 @@
     group: root
     mode: '0644'
     content: "{{ item.content }}\n"
-- name: Disable subscription nag messages
-  become: true
-  copy:
-    dest: /etc/apt/apt.conf.d/no-nag-script
-    owner: root
-    group: root
-    mode: '0755'
-    content: |
-      DPkg::Post-Invoke { "dpkg -V proxmox-widget-toolkit | grep -q '/proxmoxlib\.js$'; if [ $? -eq 1 ]; then { echo 'Removing subscription nag from UI...'; sed -i '/data\.status.*{/{s/\!//;s/active/NoMoreNagging/}' /usr/share/javascript/proxmox-widget-toolkit/proxmoxlib.js; }; fi"; };
 - name: Refresh apt
   become: true
   apt:
