@@ -1,0 +1,7 @@
+- name: Include distribution specific tasks
+  include_tasks: "distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
+- name: Iterate over disks
+  include_tasks: prepare-disk.yaml
+  loop: "{{ disks }}"
+  loop_control:
+    loop_var: disk

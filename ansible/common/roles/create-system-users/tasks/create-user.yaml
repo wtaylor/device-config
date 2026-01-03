@@ -1,0 +1,6 @@
+- name: Create user - "{{ user.username }}"
+  become: true
+  ansible.builtin.user:
+    name: "{{ user.username }}"
+    uid: "{{ user.uid }}"
+    system: true

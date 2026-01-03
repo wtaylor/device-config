@@ -1,0 +1,34 @@
+- name: Find id of device with serial - {{ disk.serial }}
+  ansible.builtin.shell: |
+    set -o pipefail
+    lsblk -o name,serial -J | jq -r '.blockdevices[] | select(.serial == "{{ disk.serial }}") | .name'
+  changed_when: false
+  register: disk_device_command
+- name: Create a new ext4 primary partition
+  become: true
+  community.general.parted:
+    device: "/dev/{{ disk_device_command.stdout }}"
+    number: 1
+    state: present
+    fs_type: ext4
+- name: "Create a ext4 filesystem on /dev/{{ disk_device_command.stdout }}1"
+  become: true
+  community.general.filesystem:
+    fstype: ext4
+    dev: "/dev/{{ disk_device_command.stdout }}1"
+- name: Configure volume mount - {{ disk.mountpoint }}
+  become: true
+  ansible.posix.mount:
+    src: "/dev/{{ disk_device_command.stdout }}1"
+    path: "{{ disk.mountpoint }}"
+    fstype: ext4
+    opts: defaults,nofail,x-systemd.device-timeout=9
+    state: mounted
+- name: "Ensure volume mount is owned by {{ disk.owner }}"
+  become: true
+  ansible.builtin.file:
+    path: "{{ disk.mountpoint }}"
+    state: directory
+    owner: "{{ disk.owner }}"
+    group: "{{ disk.owner }}"
+    mode: '0750'
