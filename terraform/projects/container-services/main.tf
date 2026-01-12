@@ -3,44 +3,34 @@ locals {
   ssd_volume_store   = "local-zfs"
   large_volume_store = "bigmt-vmdata"
   dns_server         = "172.28.0.1"
-  default_gateway    = "172.28.0.1"
+  node_name          = "tardis"
+  ignition_file      = "./files/butane/main.ign"
 }
 
-resource "proxmox_virtual_environment_file" "cloud_init" {
+resource "proxmox_virtual_environment_file" "ignition" {
   content_type = "snippets"
   datastore_id = "local"
-  node_name    = "tardis"
+  node_name    = local.node_name
 
-  source_raw {
-    data = <<-EOF
-    #cloud-config
-    hostname: docker-services
-    package_update: true
-    package_upgrade: true
-    packages:
-    - qemu-guest-agent
-    - python3
-    - python3-pip
-    users:
-    - default
-    - name: wtaylor
-      groups: sudo
-      shell: /bin/bash
-      ssh-authorized-keys:
-      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAICoiyox/Pky3ViojzBlOOes3yGHgDRZ+OUogUc7h1W3O wtaylor@nebuchadnezzar"
-      - "ssh-ed25519 AAAAC3NzaC1lZDI1NTE5AAAAIJMpF3SQqNbnqHAEMTjbcyErL82dymZM1B1Iu5MbZybd wtaylor@nostromo"
-      sudo: ALL=(ALL) NOPASSWD:ALL
-    EOF
+  source_file {
+    path      = local.ignition_file
+    file_name = "container-services.ign"
+  }
 
-    file_name = "docker-services.cloud-init.yaml"
+  lifecycle {
+    replace_triggered_by = [terraform_data.ignition_hash]
   }
 }
 
-resource "proxmox_virtual_environment_vm" "docker_vm" {
-  name = "docker-services"
-  tags = ["terraform", "docker", "debian"]
+resource "terraform_data" "ignition_hash" {
+  input = filemd5(local.ignition_file)
+}
 
-  node_name = "tardis"
+resource "proxmox_virtual_environment_vm" "vm" {
+  name = "container-services"
+  tags = ["terraform", "podman", "coreos", "ignition"]
+
+  node_name = local.node_name
   vm_id     = 104
 
   machine       = "q35"
@@ -70,23 +60,37 @@ resource "proxmox_virtual_environment_vm" "docker_vm" {
     type = "l26"
   }
 
-  disk {
-    import_from = "local:import/debian-trixie.raw"
-
+  initialization {
     datastore_id = local.root_disk_store
-    interface    = "scsi0"
-    serial       = "viscsi-root"
-    size         = 256
-    backup       = true
-    ssd          = true
-    discard      = "on"
+    dns {
+      servers = [local.dns_server]
+    }
+    ip_config {
+      ipv4 {
+        address = "dhcp"
+      }
+    }
+
+    user_data_file_id = proxmox_virtual_environment_file.ignition.id
   }
 
-  # Traefik - Data
+  disk {
+    file_id      = "local:iso/coreos.img"
+    datastore_id = local.root_disk_store
+
+    interface = "scsi0"
+    serial    = "viscsi-root"
+    size      = 128
+    backup    = true
+    ssd       = true
+    discard   = "on"
+  }
+
+  # Caddy - Data
   disk {
     datastore_id = local.ssd_volume_store
     interface    = "scsi1"
-    serial       = "viscsi-traefik-data"
+    serial       = "viscsi-caddy-data"
     size         = 1
     backup       = true
     ssd          = true
@@ -179,18 +183,5 @@ resource "proxmox_virtual_environment_vm" "docker_vm" {
     discard      = "on"
   }
 
-  initialization {
-    datastore_id = local.root_disk_store
-    dns {
-      servers = [local.dns_server]
-    }
-    ip_config {
-      ipv4 {
-        address = "dhcp"
-      }
-    }
-
-    user_data_file_id = proxmox_virtual_environment_file.cloud_init.id
-  }
 }
 
