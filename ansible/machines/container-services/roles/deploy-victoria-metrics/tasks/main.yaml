@@ -1,0 +1,33 @@
+- name: Create Victoria Metrics quadlet
+  become: true
+  containers.podman.podman_container:
+    name: victoria-metrics
+    state: quadlet
+    image: docker.io/victoriametrics/victoria-metrics:v1.132.0
+    uidmap: ["0:2003"]
+    command:
+    - -storageDataPath=/mnt/data
+    - -retentionPeriod=4w
+    volume:
+    - /mnt/victoria-metrics/data:/mnt/data:Z
+    network:
+    - observability-stack.network
+    quadlet_options:
+    - |
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start victoria-metrics service
+  become: true
+  ansible.builtin.systemd:
+    name: victoria-metrics
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

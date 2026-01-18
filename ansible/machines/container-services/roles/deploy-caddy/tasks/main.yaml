@@ -1,0 +1,82 @@
+- name: Ensure Caddy data directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/caddy/data
+    state: directory
+    owner: caddy
+    group: caddy
+    mode: '0750'
+- name: Ensure Caddy config directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/caddy/config
+    state: directory
+    owner: caddy
+    group: caddy
+    mode: '0750'
+- name: Ensure caddy_config directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/caddy/caddy_config
+    state: directory
+    owner: caddy
+    group: caddy
+    mode: '0750'
+- name: Copy Caddyfile
+  become: true
+  ansible.builtin.copy:
+    src: Caddyfile
+    dest: /mnt/caddy/config/Caddyfile
+    owner: caddy
+    group: caddy
+    mode: '0640'
+- name: Create cloudflare secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: cloudflare-credentials
+    data: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
+- name: Create Caddy quadlet
+  become: true
+  containers.podman.podman_container:
+    name: caddy
+    state: quadlet
+    image: ghcr.io/caddybuilds/caddy-cloudflare:2.10.2
+    uidmap: ["0:2000"]
+    gidmap: ["0:2000"]
+    secrets:
+    - cloudflare-credentials,type=env,target=CLOUDFLARE_API_TOKEN
+    volume:
+    - /mnt/caddy/data:/data:Z
+    - /mnt/caddy/caddy_config:/config:Z
+    - /mnt/caddy/config:/etc/caddy:Z
+    network:
+    - proxy.network
+    network_aliases:
+    - grafana.tk831.net
+    ports:
+    - "80:80"
+    - "443:443"
+    quadlet_options:
+    - |
+      Notify=true
+      ReadOnly=true
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+      ExecReload=podman exec caddy /usr/bin/caddy reload --config /etc/caddy/Caddyfile --address unix//run/admin.sock --force
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start caddy service
+  become: true
+  ansible.builtin.systemd:
+    name: caddy
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

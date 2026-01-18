@@ -1,0 +1,50 @@
+- name: Ensure Grafana data directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/grafana/data
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0750'
+- name: Ensure Grafana provisioning directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/grafana/provisioning
+    state: directory
+    owner: grafana
+    group: grafana
+    mode: '0750'
+- name: Create Grafana quadlet
+  become: true
+  containers.podman.podman_container:
+    name: grafana
+    state: quadlet
+    image: docker.io/grafana/grafana:12.4.0-20648027705
+    uidmap: ["472:2004", "0:3000"]
+    gidmap: ["0:2004"]
+    volume:
+    - /mnt/grafana/data:/var/lib/grafana:Z
+    - /mnt/grafana/provisioning:/etc/grafana/provisioning:Z
+    network:
+    - observability-stack.network
+    - proxy.network
+    - podman
+    quadlet_options:
+    - |
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start grafana service
+  become: true
+  ansible.builtin.systemd:
+    name: grafana
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

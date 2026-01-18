@@ -1,0 +1,8 @@
+- name: Create internal podman network
+  become: true
+  containers.podman.podman_network:
+    name: "{{ network_name }}"
+    state: quadlet
+    internal: "{{ internal | default(true) }}"
+    opt:
+      isolate: "{{ isolate | default(omit) }}"

@@ -1,0 +1,17 @@
+{
+	admin unix//run/admin.sock
+}
+
+http:// {
+	redir https://{host}{uri}
+	log
+}
+
+grafana.tk831.net {
+	reverse_proxy grafana:3000
+  tls {
+    dns cloudflare {env.CLOUDFLARE_API_TOKEN}
+  }
+	log
+}
+

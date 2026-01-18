@@ -1,0 +1,59 @@
+- hosts: docker-services.willtaylor.info
+  remote_user: wtaylor
+  roles:
+  # - role: ../../common/roles/update-system
+  # - role: ../../common/roles/create-system-users
+  #   users:
+  #   - username: caddy
+  #     uid: 2000
+  #   - username: vector
+  #     uid: 2001
+  #   - username: victoria-logs
+  #     uid: 2002
+  #   - username: victoria-metrics
+  #     uid: 2003
+  #   - username: grafana
+  #     uid: 2004
+  #   - username: seaweedfs
+  #     uid: 2005
+  #   - username: openbau
+  #     uid: 2006
+  # - role: ../../common/roles/prepare-disk
+  #   disks:
+  #   - serial: viscsi-traefik-data
+  #     mountpoint: /mnt/caddy/data
+  #     owner: caddy
+  #   - serial: viscsi-vl-data
+  #     mountpoint: /mnt/victoria-logs/data
+  #     owner: victoria-logs
+  #   - serial: viscsi-vm-data
+  #     mountpoint: /mnt/victoria-metrics/data
+  #     owner: victoria-metrics
+  #   - serial: viscsi-grafana-data
+  #     mountpoint: /mnt/grafana/data
+  #     owner: grafana
+  #   - serial: viscsi-vector-data
+  #     mountpoint: /mnt/vector/data
+  #     owner: vector
+  #   - serial: viscsi-sfs-m-data
+  #     mountpoint: /mnt/seaweedfs/metadata
+  #     owner: seaweedfs
+  #   - serial: viscsi-sfs-ssdv-data
+  #     mountpoint: /mnt/seaweedfs/volumes/ssd
+  #     owner: seaweedfs
+  #   - serial: viscsi-sfs-hddv-data
+  #     mountpoint: /mnt/seaweedfs/volumes/hdd
+  #     owner: seaweedfs
+  #   - serial: viscsi-openbau-data
+  #     mountpoint: /mnt/openbau/data
+  #     owner: openbau
+  # - role: ./roles/configure-podman
+  # - role: ./roles/create-network
+  #   network_name: observability-stack
+  # - role: ./roles/create-network
+  #   network_name: proxy
+  # - role: ./roles/deploy-caddy
+  # - role: ./roles/deploy-victoria-logs
+  # - role: ./roles/deploy-victoria-metrics
+  # - role: ./roles/deploy-vector-aggregator
+  - role: ./roles/deploy-grafana

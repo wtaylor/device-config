@@ -11,13 +11,15 @@ spec:
   enableSuperuserAccess: true
   storage:
     storageClass: proxmox-zfs
-    size: 100Gi
+    size: 20Gi
+    resizeInUseVolumes: false
   walStorage:
     storageClass: proxmox-zfs
-    size: 50Gi
+    size: 2Gi
+    resizeInUseVolumes: false
   postgresql:
     parameters:
-      max_slot_wal_keep_size: "10GB"
+      max_slot_wal_keep_size: "1GB"
   bootstrap:
     recovery:
       source: postgres-default
@@ -82,7 +84,7 @@ spec:
         compression: gzip
         maxParallel: 8
         encryption: AES256
-    retentionPolicy: 14d
+    retentionPolicy: 7d
   resources:
     requests:
       memory: "512Mi"

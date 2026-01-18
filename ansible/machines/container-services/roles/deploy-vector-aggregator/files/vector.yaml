@@ -1,0 +1,108 @@
+#                                    __   __  __
+#                                    \ \ / / / /
+#                                     \ V / / /
+#                                      \_/  \/
+#
+#                                    V E C T O R
+#                                   Configuration
+#
+# ------------------------------------------------------------------------------
+# Website: https://vector.dev
+# Docs: https://vector.dev/docs
+# Chat: https://chat.vector.dev
+# ------------------------------------------------------------------------------
+data_dir: /mnt/data
+api:
+  enabled: true
+  address: 127.0.0.1:8686
+  playground: false
+schema:
+  log_namespace: true
+sources:
+  vector_internal_metrics:
+    type: internal_metrics
+  vector_internal_logs:
+    type: journald
+    include_units:
+    - vector.service
+  vector_upstream_kubernetes_agents: &vector_source_defaults
+    type: vector
+    address: 0.0.0.0:6000
+    version: "2"
+    tls:
+      enabled: false
+  vector_lxc_agents:
+    <<: *vector_source_defaults
+    address: 0.0.0.0:6001
+  prometheus_remote_write:
+    type: prometheus_remote_write
+    address: 0.0.0.0:9090
+  talos_kernel_logs:
+    address: 0.0.0.0:6050
+    type: socket
+    mode: udp
+    max_length: 102400
+    decoding:
+      codec: json
+    host_key: __host
+  talos_service_logs:
+    address: 0.0.0.0:6051
+    type: socket
+    mode: udp
+    max_length: 102400
+    decoding:
+      codec: json
+    host_key: __host
+transforms:
+  mapped_internal_journal_logs:
+    type: remap
+    inputs: [vector_internal_logs]
+    source: |-
+      .message = .
+      .timestamp = %journald.timestamp
+      .lxc_host = %journald.host
+      .host = "tardis"
+      .service = %journald.metadata._SYSTEMD_UNIT
+sinks:
+  generic_metrics_sink: &vm_metrics_sink_defaults
+    type: prometheus_remote_write
+    inputs:
+    - vector_internal_metrics
+    - vector_upstream_kubernetes_agents
+    - prometheus_remote_write
+    endpoint: http://victoria-metrics:8428/api/v1/write
+    healthcheck:
+      enabled: false
+  kubernetes_logs_sink: &vl_logs_sink_defaults
+    type: elasticsearch
+    inputs: [vector_upstream_kubernetes_agents]
+    endpoints: ['http://victoria-logs:9428/insert/elasticsearch']
+    mode: bulk
+    api_version: v8
+    healthcheck:
+      enabled: false
+    query:
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: host,service,kubernetes_pod_name,kubernetes_container_name
+  talos_kernel_logs_sink:
+    <<: *vl_logs_sink_defaults
+    inputs: [talos_kernel_logs]
+    query:
+      _msg_field: msg
+      _time_field: talos-time
+      _stream_fields: facility
+  talos_service_logs_sink:
+    <<: *vl_logs_sink_defaults
+    inputs: [talos_service_logs]
+    query:
+      _msg_field: msg
+      _time_field: talos-time
+      _stream_fields: talos-service
+  lxc_logs_sink:
+    <<: *vl_logs_sink_defaults
+    inputs: [vector_lxc_agents, mapped_internal_journal_logs]
+    query:
+      _msg_field: message
+      _time_field: timestamp
+      _stream_fields: host,lxc_host,service

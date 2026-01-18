@@ -1,0 +1,33 @@
+- name: Create Victoria Logs quadlet
+  become: true
+  containers.podman.podman_container:
+    name: victoria-logs
+    state: quadlet
+    image: docker.io/victoriametrics/victoria-logs:v1.43.1
+    uidmap: ["0:2002"]
+    command:
+    - -storageDataPath=/mnt/data
+    - -retention.maxDiskSpaceUsageBytes=100GiB
+    volume:
+    - /mnt/victoria-logs/data:/mnt/data:Z
+    network:
+    - observability-stack.network
+    quadlet_options:
+    - |
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start victoria-logs service
+  become: true
+  ansible.builtin.systemd:
+    name: victoria-logs
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"
