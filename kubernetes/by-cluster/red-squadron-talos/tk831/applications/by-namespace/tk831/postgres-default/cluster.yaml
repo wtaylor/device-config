@@ -20,9 +20,9 @@ spec:
   postgresql:
     parameters:
       max_slot_wal_keep_size: "1GB"
-  bootstrap:
-    recovery:
-      source: postgres-default
+  # bootstrap:
+  #   recovery:
+  #     source: postgres-default
   managed:
     roles:
     - name: gitea
@@ -53,38 +53,38 @@ spec:
       login: true
       passwordSecret:
         name: postgres-tk831-default-role-paperless
-  externalClusters:
-  - name: postgres-default
-    barmanObjectStore:
-      endpointURL: https://s3.willtaylor.info
-      destinationPath: s3://ssd-cnpg-postgres-default/
-      s3Credentials:
-        accessKeyId:
-          name: postgres-default-barman-s3-credentials
-          key: access_key
-        secretAccessKey:
-          name: postgres-default-barman-s3-credentials
-          key: secret_key
-      wal:
-        compression: gzip
-        maxParallel: 8
-        encryption: AES256
-  backup:
-    barmanObjectStore:
-      endpointURL: https://s3.willtaylor.info
-      destinationPath: s3://ssd-cnpg-postgres-default/
-      s3Credentials:
-        accessKeyId:
-          name: postgres-default-barman-s3-credentials
-          key: access_key
-        secretAccessKey:
-          name: postgres-default-barman-s3-credentials
-          key: secret_key
-      wal:
-        compression: gzip
-        maxParallel: 8
-        encryption: AES256
-    retentionPolicy: 7d
+  # externalClusters:
+  # - name: postgres-default
+  #   barmanObjectStore:
+  #     endpointURL: https://s3.willtaylor.info
+  #     destinationPath: s3://ssd-cnpg-postgres-default/
+  #     s3Credentials:
+  #       accessKeyId:
+  #         name: postgres-default-barman-s3-credentials
+  #         key: access_key
+  #       secretAccessKey:
+  #         name: postgres-default-barman-s3-credentials
+  #         key: secret_key
+  #     wal:
+  #       compression: gzip
+  #       maxParallel: 8
+  #       encryption: AES256
+  # backup:
+  #   barmanObjectStore:
+  #     endpointURL: https://s3.willtaylor.info
+  #     destinationPath: s3://ssd-cnpg-postgres-default/
+  #     s3Credentials:
+  #       accessKeyId:
+  #         name: postgres-default-barman-s3-credentials
+  #         key: access_key
+  #       secretAccessKey:
+  #         name: postgres-default-barman-s3-credentials
+  #         key: secret_key
+  #     wal:
+  #       compression: gzip
+  #       maxParallel: 8
+  #       encryption: AES256
+  #   retentionPolicy: 7d
   resources:
     requests:
       memory: "512Mi"
