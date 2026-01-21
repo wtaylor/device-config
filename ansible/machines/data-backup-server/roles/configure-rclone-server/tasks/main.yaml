@@ -1,0 +1,8 @@
+- name: Ensure restic data directory exists
+  become: true
+  ansible.builtin.file:
+    path: /var/mnt/backup/data/restic
+    state: directory
+    owner: rclone
+    group: rclone
+    mode: '0750'

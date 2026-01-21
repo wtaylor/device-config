@@ -1,25 +1,34 @@
 - name: Find id of device with serial - {{ disk.serial }}
   ansible.builtin.shell: |
     set -o pipefail
-    lsblk -o name,serial -J | jq -r '.blockdevices[] | select(.serial == "{{ disk.serial }}") | .name'
+    lsblk -o id-link,name,serial -SJ | jq -r '.blockdevices[] | select(.serial == "{{ disk.serial }}") | .["id-link"]'
   changed_when: false
   register: disk_device_command
 - name: Create a new ext4 primary partition
   become: true
   community.general.parted:
-    device: "/dev/{{ disk_device_command.stdout }}"
+    device: "/dev/disk/by-id/{{ disk_device_command.stdout }}"
     number: 1
     state: present
     fs_type: ext4
+    label: gpt
+    name: "{{ disk.label }}"
 - name: "Create a ext4 filesystem on /dev/{{ disk_device_command.stdout }}1"
   become: true
   community.general.filesystem:
     fstype: ext4
-    dev: "/dev/{{ disk_device_command.stdout }}1"
+    dev: "/dev/disk/by-id/{{ disk_device_command.stdout }}-part1"
+- name: Find id of primary partition - {{ disk.serial }}
+  become: true
+  ansible.builtin.shell: |
+    set -o pipefail
+    blkid -o json -t PARTLABEL={{ disk.label }} | jq -r '.uuid'
+  changed_when: false
+  register: disk_fs_uuid_command
 - name: Configure volume mount - {{ disk.mountpoint }}
   become: true
   ansible.posix.mount:
-    src: "/dev/{{ disk_device_command.stdout }}1"
+    src: "UUID={{ disk_fs_uuid_command.stdout }}"
     path: "{{ disk.mountpoint }}"
     fstype: ext4
     opts: defaults,nofail,x-systemd.device-timeout=9

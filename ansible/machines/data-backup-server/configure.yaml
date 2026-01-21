@@ -1,0 +1,21 @@
+- hosts: data-backup-server.willtaylor.info
+  remote_user: ansible
+  roles:
+  - role: ../../common/roles/create-system-users
+    users:
+    - username: rclone
+      uid: 2000
+  - role: ../../common/roles/prepare-disk
+    disks:
+    - serial: viscsi-backup-data
+      label: backup-data
+      mountpoint: /var/mnt/backup/data
+      owner: rclone
+  # - role: ./roles/configure-rclone-server
+  # - role: ./roles/configure-rclone-sync
+  #   cron_expr: "0 0 * * *"
+  #   offsite_targets:
+  #     proton:
+  #     - repository_1
+  #     backblaze:
+  #     - repository_2
