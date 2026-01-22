@@ -1,8 +1,55 @@
+- name: Ensure rclone group exists
+  become: true
+  ansible.builtin.group:
+    name: rclone
+    gid: 2500
+- name: Ensure rclone-server user exists
+  become: true
+  ansible.builtin.user:
+    name: rclone-server
+    uid: 2000
+    group: rclone
+    system: true
 - name: Ensure restic data directory exists
   become: true
   ansible.builtin.file:
     path: /var/mnt/backup/data/restic
     state: directory
-    owner: rclone
+    owner: root
     group: rclone
-    mode: '0750'
+    mode: '0770'
+- name: Create rclone-restic-server quadlet
+  become: true
+  containers.podman.podman_container:
+    name: rclone-restic-server
+    state: quadlet
+    # image: docker.io/library/nginx:stable-alpine
+    image: ghcr.io/rclone/rclone:1.72.1
+    uidmap: ["0:2000"]
+    gidmap: ["0:2500"]
+    command: [serve, restic, -v, --addr, '0.0.0.0:8080', /mnt/data/restic]
+    volume:
+    - /var/mnt/backup/data/restic:/mnt/data/restic:z
+    ports:
+    - "8080:8080"
+    # ports:
+    # - "8080:80"
+    quadlet_options:
+    - |
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start rclone server service
+  become: true
+  ansible.builtin.systemd:
+    name: rclone-restic-server
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

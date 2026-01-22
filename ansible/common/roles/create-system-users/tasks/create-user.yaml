@@ -4,3 +4,4 @@
     name: "{{ user.username }}"
     uid: "{{ user.uid }}"
     system: true
+    groups: "{{ user.groups | default([]) }}"

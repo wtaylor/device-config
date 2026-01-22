@@ -13,7 +13,7 @@
     fs_type: ext4
     label: gpt
     name: "{{ disk.label }}"
-- name: "Create a ext4 filesystem on /dev/{{ disk_device_command.stdout }}1"
+- name: "Create a ext4 filesystem on /dev/disk/by-id/{{ disk_device_command.stdout }}-part1"
   become: true
   community.general.filesystem:
     fstype: ext4
@@ -39,5 +39,5 @@
     path: "{{ disk.mountpoint }}"
     state: directory
     owner: "{{ disk.owner }}"
-    group: "{{ disk.owner }}"
-    mode: '0750'
+    group: "{{ disk.group | default(disk.owner) }}"
+    mode: "{{ disk.mode }}"

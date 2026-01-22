@@ -1,17 +1,27 @@
 - hosts: data-backup-server.willtaylor.info
   remote_user: ansible
   roles:
+  - role: ../../common/roles/create-system-groups
+    system_groups:
+    - name: rclone
+      gid: 2500
   - role: ../../common/roles/create-system-users
-    users:
-    - username: rclone
+    system_users:
+    - username: rclone-server
       uid: 2000
-  - role: ../../common/roles/prepare-disk
+      groups: [rclone]
+    - username: rclone-sync
+      uid: 2001
+      groups: [rclone]
+  - role: ../../common/roles/prepare-disks
     disks:
     - serial: viscsi-backup-data
       label: backup-data
       mountpoint: /var/mnt/backup/data
-      owner: rclone
-  # - role: ./roles/configure-rclone-server
+      owner: root
+      group: rclone
+      mode: "0770"
+  - role: ./roles/configure-rclone-server
   # - role: ./roles/configure-rclone-sync
   #   cron_expr: "0 0 * * *"
   #   offsite_targets:

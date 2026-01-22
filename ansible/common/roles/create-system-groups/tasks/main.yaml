@@ -1,0 +1,5 @@
+- name: Iterate over groups
+  include_tasks: create-group.yaml
+  loop: "{{ system_groups }}"
+  loop_control:
+    loop_var: group

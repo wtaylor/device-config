@@ -1,5 +1,5 @@
 - name: Iterate over users
   include_tasks: create-user.yaml
-  loop: "{{ users }}"
+  loop: "{{ system_users }}"
   loop_control:
     loop_var: user
