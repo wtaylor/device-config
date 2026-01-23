@@ -27,12 +27,32 @@
   register: disk_fs_uuid_command
 - name: Configure volume mount - {{ disk.mountpoint }}
   become: true
-  ansible.posix.mount:
-    src: "UUID={{ disk_fs_uuid_command.stdout }}"
-    path: "{{ disk.mountpoint }}"
-    fstype: ext4
-    opts: defaults,nofail,x-systemd.device-timeout=9
-    state: mounted
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Mount /dev/disk/by-uuid/{{ disk_fs_uuid_command.stdout }} to {{ disk.mountpoint }}
+      After=local-fs-pre.target
+
+      [Mount]
+      What=/dev/disk/by-uuid/{{ disk_fs_uuid_command.stdout }}
+      Where={{ disk.mountpoint }}
+      Type=ext4
+      Options=defaults
+
+      [Install]
+      WantedBy=default.target
+    dest: /etc/systemd/system/{{ (disk.mountpoint | split('/') | join('-'))[1:] }}.mount
+    owner: root
+    group: root
+    mode: "0755"
+  register: mount_unit
+- name: "Enable mount unit - {{ disk.mountpoint }}"
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: "{{ (disk.mountpoint | split('/') | join('-'))[1:] }}.mount"
+    state: "{{ 'restarted' if mount_unit.changed else 'started' }}"
+    enabled: true
 - name: "Ensure volume mount is owned by {{ disk.owner }}"
   become: true
   ansible.builtin.file:

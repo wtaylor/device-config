@@ -17,6 +17,9 @@ passwd:
     groups:
     - wheel
     - sudo
+  - name: containers
+    system: true
+    no_create_home: true
 storage:
   directories:
   - path: /etc/ucore-autorebase

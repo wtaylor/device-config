@@ -47,7 +47,10 @@
     ports:
     - "8080:8080"
     quadlet_options:
-    - |
+    - |2
+      [Unit]
+      RequiresMountsFor=/var/mnt/backup/data
+
       [Service]
       Restart=on-failure
       RestartSec=5s

@@ -25,7 +25,7 @@ resource "terraform_data" "ignition_hash" {
   input = filemd5(local.ignition_file)
 }
 
-resource "proxmox_virtual_environment_vm" "vm" {
+resource "proxmox_virtual_environment_vm" "data_backup_server" {
   name = "data-backup-server"
   tags = ["terraform", "podman", "coreos", "ignition"]
 
