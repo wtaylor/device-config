@@ -11,20 +11,20 @@ spec:
     template:
       type: kubernetes.io/Opaque
       data:
-        RESTIC_REPOSITORY: s3:https://s3.willtaylor.info/ssd-backup-volsync/gitea-ssh-pvc
+        RESTIC_REPOSITORY: rest:http://data-backup-server.willtaylor.info:8080/volumes/gitea-ssh
         RESTIC_PASSWORD: "{{ .restic_password }}"
-        AWS_ACCESS_KEY_ID: "{{ .access_key }}"
-        AWS_SECRET_ACCESS_KEY: "{{ .secret_key }}"
+        RESTIC_REST_USERNAME: "{{ .rclone_username }}"
+        RESTIC_REST_PASSWORD: "{{ .rclone_password }}"
     deletionPolicy: Delete
   data:
-  - secretKey: access_key
+  - secretKey: rclone_username
     remoteRef:
-      key: kv/services/volsync/s3-credentials
-      property: access_key
-  - secretKey: secret_key
+      key: kv/services/volsync/rclone-credentials
+      property: username
+  - secretKey: rclone_password
     remoteRef:
-      key: kv/services/volsync/s3-credentials
-      property: secret_key
+      key: kv/services/volsync/rclone-credentials
+      property: password
   - secretKey: restic_password
     remoteRef:
       key: kv/services/volsync/restic-credentials
