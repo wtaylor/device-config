@@ -18,22 +18,34 @@
     owner: root
     group: rclone
     mode: '0770'
+- name: Create restic_username secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: restic_username
+    data: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+- name: Create restic_password secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: restic_password
+    data: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
 - name: Create rclone-restic-server quadlet
   become: true
   containers.podman.podman_container:
     name: rclone-restic-server
     state: quadlet
-    # image: docker.io/library/nginx:stable-alpine
     image: ghcr.io/rclone/rclone:1.72.1
     uidmap: ["0:2000"]
     gidmap: ["0:2500"]
+    secrets:
+    - restic_username,type=env,target=RCLONE_USER
+    - restic_password,type=env,target=RCLONE_PASS
     command: [serve, restic, -v, --addr, '0.0.0.0:8080', /mnt/data/restic]
     volume:
     - /var/mnt/backup/data/restic:/mnt/data/restic:z
     ports:
     - "8080:8080"
-    # ports:
-    # - "8080:80"
     quadlet_options:
     - |
       [Service]
