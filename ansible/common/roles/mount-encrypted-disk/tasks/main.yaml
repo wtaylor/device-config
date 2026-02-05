@@ -1,0 +1,79 @@
+- name: "Upload keyfile - {{ mountpoint.path }}"
+  become: true
+  ansible.builtin.copy:
+    src: "{{ keyfile.src }}"
+    dest: "{{ keyfile.dest }}"
+    owner: "{{ keyfile.owner | default('root') }}"
+    group: "{{ keyfile.owner | default('root') }}"
+    mode: "{{ keyfile.mode | default('0600') }}"
+- name: "Add crypttab entry for - {{ mountpoint.path }}"
+  become: true
+  community.general.crypttab:
+    name: "{{ disk_mapper_name }}"
+    backing_device: "UUID={{ backing_device_uuid }}"
+    password: "{{ keyfile.dest }}"
+    opts: "nofail,headless=true"
+    state: present
+- name: Configure volume decrypt - {{ mountpoint.path }}
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Start cryptdisks for - {{ disk_mapper_name }}
+      After=local-fs.target
+
+      [Service]
+      Type=oneshot
+      RemainAfterExit=yes
+      ExecStart=cryptdisks_start {{ disk_mapper_name }}
+
+      [Install]
+      WantedBy=default.target
+    dest: /etc/systemd/system/crypt-{{ disk_mapper_name }}.service
+    owner: root
+    group: root
+    mode: "0755"
+  register: crypt_unit
+- name: Configure volume mount - {{ mountpoint.path }}
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=Mount /dev/disk/by-uuid/{{ decrypted_fs_uuid }} to {{ mountpoint.path }}
+      After=crypt-{{ disk_mapper_name }}.service
+
+      [Mount]
+      What=/dev/disk/by-uuid/{{ decrypted_fs_uuid }}
+      Where={{ mountpoint.path }}
+      Type=ext4
+      Options=defaults,nofail
+
+      [Install]
+      WantedBy=default.target
+    dest: /etc/systemd/system/{{ (mountpoint.path | split('/') | join('-'))[1:] }}.mount
+    owner: root
+    group: root
+    mode: "0755"
+  register: mount_unit
+- name: "Enable cryptdisks unit - {{ mountpoint.path }}"
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: "crypt-{{ disk_mapper_name }}.service"
+    state: "{{ 'restarted' if crypt_unit.changed else 'started' }}"
+    enabled: true
+- name: "Enable mount unit - {{ mountpoint.path }}"
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: "{{ (mountpoint.path | split('/') | join('-'))[1:] }}.mount"
+    state: "{{ 'restarted' if mount_unit.changed else 'started' }}"
+    enabled: true
+- name: "Ensure volume mount is owned by {{ mountpoint.owner }}"
+  become: true
+  ansible.builtin.file:
+    path: "{{ mountpoint.path }}"
+    state: directory
+    owner: "{{ mountpoint.owner }}"
+    group: "{{ mountpoint.group | default(mountpoint.owner) }}"
+    mode: "{{ mountpoint.mode }}"

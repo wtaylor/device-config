@@ -12,6 +12,7 @@ external-insight ansible_host=64.227.65.173
 red-one ansible_host=172.28.2.2
 container-services.willtaylor.info
 data-backup-server.willtaylor.info
+rootn.willtaylor.info
 
 [all:vars]
 ansible_python_interpreter=auto_silent

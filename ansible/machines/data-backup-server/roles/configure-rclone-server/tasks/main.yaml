@@ -1,15 +1,3 @@
-- name: Ensure rclone group exists
-  become: true
-  ansible.builtin.group:
-    name: rclone
-    gid: 2500
-- name: Ensure rclone-server user exists
-  become: true
-  ansible.builtin.user:
-    name: rclone-server
-    uid: 2000
-    group: rclone
-    system: true
 - name: Ensure restic data directory exists
   become: true
   ansible.builtin.file:

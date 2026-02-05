@@ -1,0 +1,28 @@
+- hosts: 127.0.0.1
+  connection: local
+  tasks:
+  - name: Mount ROOTS
+    ansible.builtin.shell:
+      chdir: "{{ playbook_dir }}"
+      cmd: "../../../scripts/mount_roots.sh"
+    changed_when: false
+  - name: Write dietpi.txt
+    vars:
+      PASSWORD_OVERRIDE: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/rootn-root-password') }}"
+    ansible.builtin.template:
+      src: dietpi.j2.txt
+      dest: /tmp/dietpi.txt
+      owner: wtaylor
+      group: wtaylor
+      mode: '0600'
+  - name: Unmount ROOTS
+    ansible.builtin.shell:
+    args:
+      chdir: "{{ playbook_dir }}"
+      cmd: "../../../scripts/unmount_roots.sh"
+    changed_when: false
+  - name: Download DietPi image
+    ansible.builtin.get_url:
+      url: https://dietpi.com/downloads/images/DietPi_RPi234-ARMv8-Trixie.img.xz
+      dest: /tmp/dietpi-trixie-armv8.img.xz
+      checksum: sha256:https://dietpi.com/downloads/images/DietPi_RPi234-ARMv8-Trixie.img.xz.sha256

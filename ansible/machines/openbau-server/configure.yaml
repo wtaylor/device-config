@@ -1,0 +1,16 @@
+- hosts: openbau-server.willtaylor.info
+  remote_user: ansible
+  roles:
+  - role: ../../common/roles/create-system-users
+    system_users:
+    - username: openbau
+      uid: 2000
+  - role: ../../common/roles/prepare-disks
+    disks:
+    - serial: viscsi-vault-data
+      label: vault-data
+      mountpoint: /var/mnt/vault/data
+      owner: root
+      group: openbau
+      mode: "0770"
+  - role: ./roles/configure-openbau

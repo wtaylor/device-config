@@ -1,0 +1,36 @@
+- hosts: rootn.willtaylor.info
+  remote_user: ansible
+  pre_tasks:
+  - name: Mount ROOTS
+    local_action: ansible.builtin.shell
+    args:
+      chdir: "{{ playbook_dir }}"
+      cmd: "../../../scripts/mount_roots.sh"
+    changed_when: false
+  post_tasks:
+  - name: Unmount ROOTS
+    local_action: ansible.builtin.shell
+    args:
+      chdir: "{{ playbook_dir }}"
+      cmd: "../../../scripts/unmount_roots.sh"
+    changed_when: false
+  roles:
+  - role: ../../common/roles/create-system-users
+    system_users:
+    - username: openbau
+      uid: 2000
+  - role: ../../common/roles/mount-encrypted-disk
+    backing_device_uuid: 8658de3c-d4aa-4b64-9b73-42083316d611
+    decrypted_fs_uuid: 9a7d845b-ae34-4e2d-b84d-2c90a3973288
+    disk_mapper_name: rootn
+    keyfile:
+      src: /run/media/wtaylor/ROOTS/keys/rootn-keyfile
+      dest: /root/rootn-keyfile
+      owner: root
+      group: root
+      mode: '0600'
+    mountpoint:
+      path: /mnt/rootn
+      owner: root
+      group: root
+      mode: '0755'

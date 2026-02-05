@@ -1,0 +1,60 @@
+- name: Ensure bao-config directory exists
+  become: true
+  ansible.builtin.file:
+    path: /var/mnt/vault/data/bao-config
+    state: directory
+    owner: root
+    group: openbau
+    mode: '0770'
+- name: Ensure bao-data directory exists
+  become: true
+  ansible.builtin.file:
+    path: /var/mnt/vault/data/bao-data
+    state: directory
+    owner: root
+    group: openbau
+    mode: '0770'
+- name: Copy vault configuration
+  become: true
+  copy:
+    src: vault.hcl
+    dest: /var/mnt/vault/data/bao-config/vault.hcl
+    owner: openbau
+    group: openbau
+    mode: '0640'
+  register: config
+- name: Create openbau-server quadlet
+  become: true
+  containers.podman.podman_container:
+    name: openbau-server
+    state: quadlet
+    image: ghcr.io/openbao/openbao:2.4.4
+    uidmap: ["0:2000"]
+    gidmap: ["0:2000"]
+    volume:
+    - /var/mnt/vault/data/bao-config:/openbau/config:z
+    - /var/mnt/vault/data/bao-data:/openbao/file:z
+    ports:
+    - "8080:8200"
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/vault/data
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start rclone server service
+  become: true
+  ansible.builtin.systemd:
+    name: openbau-server
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"
