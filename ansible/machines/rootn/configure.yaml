@@ -17,7 +17,7 @@
   roles:
   - role: ../../common/roles/create-system-users
     system_users:
-    - username: openbau
+    - username: openbao
       uid: 2000
   - role: ../../common/roles/mount-encrypted-disk
     backing_device_uuid: 8658de3c-d4aa-4b64-9b73-42083316d611
@@ -34,3 +34,23 @@
       owner: root
       group: root
       mode: '0755'
+  - role: ../../common/roles/certificates
+    cloudflare_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/cloudflare_token') }}"
+    domains:
+    - vault.rootn.tk831.net
+    contact_mail: me@willtaylor.info
+    deploy_hook: |
+      #!/bin/sh
+
+      CERT_DIR="/mnt/rootn/certs"
+
+      cat $RENEWED_LINEAGE/cert.pem > $CERT_DIR/cert.pem
+      cat $RENEWED_LINEAGE/fullchain.pem > $CERT_DIR/fullchain.pem
+      cat $RENEWED_LINEAGE/privkey.pem > $CERT_DIR/privkey.pem
+
+      chown openbao:openbao $CERT_DIR/cert.pem
+      chown openbao:openbao $CERT_DIR/fullchain.pem
+      chown openbao:openbao $CERT_DIR/privkey.pem
+
+      systemctl restart openbao.service
+  - role: ./roles/configure-openbao

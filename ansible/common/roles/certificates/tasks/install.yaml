@@ -4,9 +4,12 @@
     state: present
     name:
     - python3
+    - python3-dev
     - python3-venv
+    - python3-setuptools
     - python3-virtualenv
-    - libaugeas0
+    - libaugeas-dev
+    - gcc
 - name: Install certbot In Venv
   become: true
   ansible.builtin.pip:

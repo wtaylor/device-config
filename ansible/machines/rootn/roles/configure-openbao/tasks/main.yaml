@@ -1,0 +1,98 @@
+- name: Ensure bao-config directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/rootn/openbao/config
+    state: directory
+    owner: root
+    group: openbao
+    mode: '0770'
+- name: Ensure bao-data directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/rootn/openbao/data
+    state: directory
+    owner: root
+    group: openbao
+    mode: '0770'
+- name: Ensure bao-seal directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/rootn/openbao/seal
+    state: directory
+    owner: root
+    group: openbao
+    mode: '0770'
+- name: Ensure certs directory exists
+  become: true
+  ansible.builtin.file:
+    path: /mnt/rootn/certs
+    state: directory
+    owner: root
+    group: openbao
+    mode: '0770'
+- name: Install deb822 dependencies
+  become: true
+  ansible.builtin.apt:
+    name: [python3-debian]
+- name: Configure openbao apt source
+  become: true
+  ansible.builtin.deb822_repository:
+    name: openbao
+    types: deb
+    uris: https://pkgs.openbao.org/deb/
+    suites: stable
+    components: [main]
+    signed_by: "{{ lookup('ansible.builtin.file', 'openbao-deb.gpg.pub') }}"
+- name: Install openbao
+  become: true
+  ansible.builtin.apt:
+    update_cache: true
+    name: [openbao]
+- name: Copy openbao configuration
+  become: true
+  copy:
+    src: openbao.hcl
+    dest: /mnt/rootn/openbao/config/openbao.hcl
+    owner: openbao
+    group: openbao
+    mode: '0640'
+  register: config
+- name: Copy vault unseal key
+  become: true
+  ansible.builtin.copy:
+    src: /run/media/wtaylor/ROOTS/keys/rootn-vault-unseal-20260207-1.key
+    dest: /mnt/rootn/openbao/seal/20260207-1.key
+    owner: openbao
+    group: openbao
+    mode: '0600'
+  register: unseal_key
+- name: Ensure openbao systemd service drop in directory exists
+  become: true
+  ansible.builtin.file:
+    path: /etc/systemd/system/openbao.service.d
+    state: directory
+    owner: root
+    group: root
+    mode: '0755'
+- name: Configure openbao systemd service overrides
+  become: true
+  ansible.builtin.copy:
+    dest: /etc/systemd/system/openbao.service
+    owner: root
+    group: root
+    mode: '0644'
+    content: |
+      [Unit]
+      RequiresMountsFor=/mnt/rootn
+      [Service]
+      ExecStart=/usr/bin/bao server -config=/mnt/rootn/openbao/config/openbao.hcl
+- name: Systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start openbao service
+  become: true
+  ansible.builtin.systemd:
+    name: openbao.service
+    enabled: true
+    state: "{{ 'restarted' if config.changed else 'started' }}"

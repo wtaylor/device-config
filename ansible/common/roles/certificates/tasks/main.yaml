@@ -2,7 +2,7 @@
   include_tasks: install.yaml
 - name: Write cloudflare credentials to file
   become: true
-  copy:
+  ansible.builtin.copy:
     content: |
       dns_cloudflare_api_token = {{ cloudflare_token }}
     dest: /root/cloudflare.ini
@@ -10,7 +10,8 @@
     group: root
     mode: '0600'
 - name: Ensure pre/post/deploy hook folders exist.
-  file:
+  become: true
+  ansible.builtin.file:
     path: /etc/letsencrypt/renewal-hooks/{{ item }}
     state: directory
     mode: '0755'
@@ -21,7 +22,8 @@
   - post
   - deploy
 - name: Copy Deploy Hook
-  copy:
+  become: true
+  ansible.builtin.copy:
     content: "{{ deploy_hook }}"
     dest: /etc/letsencrypt/renewal-hooks/deploy/ansible-certificate-hook
     owner: root
@@ -29,7 +31,7 @@
     mode: '0750'
 - name: Copy certificate renewal systemd service
   become: true
-  copy:
+  ansible.builtin.copy:
     src: systemd/certificate-renewal.service
     dest: /etc/systemd/system/
     owner: root
@@ -37,7 +39,7 @@
     mode: '0755'
 - name: Copy certificate renewal systemd timer
   become: true
-  copy:
+  ansible.builtin.copy:
     src: systemd/certificate-renewal.timer
     dest: /etc/systemd/system/
     owner: root
@@ -45,13 +47,14 @@
     mode: '0755'
 - name: Start and enable certificate renewal timer
   become: true
-  systemd:
+  ansible.builtin.systemd:
     name: certificate-renewal.timer
     state: started
     enabled: true
     daemon_reload: true
 - name: Check if certificate already exists
-  stat:
+  become: true
+  ansible.builtin.stat:
     path: /etc/letsencrypt/live/{{ domains | first | replace('*.', '') }}/cert.pem
   register: certificate_pem
 - name: Generate certificates # noqa no-changed-when
