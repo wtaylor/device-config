@@ -1,0 +1,10 @@
+[Unit]
+Description=Restic backup timer
+
+[Timer]
+OnCalendar=*-*-* 02:00:00
+Persistent=true
+Unit=restic-backup-{{ systemd.unit_suffix }}.service
+
+[Install]
+WantedBy=default.target

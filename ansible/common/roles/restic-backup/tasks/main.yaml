@@ -2,3 +2,54 @@
   become: true
   ansible.builtin.apt:
     name: [restic]
+- name: Ensure restic repository exists
+  become: true
+  environment:
+    RESTIC_PASSWORD: "{{ repository.password }}"
+    RESTIC_REST_USERNAME: "{{ repository.rest_username }}"
+    RESTIC_REST_PASSWORD: "{{ repository.rest_password }}"
+  ansible.builtin.command:
+    cmd: restic -r {{ repository.url }} init
+  register: restic_init
+  changed_when:
+  - restic_init.rc == 0
+  failed_when:
+  - restic_init.rc != 0
+  - '"config file already exists" not in restic_init.stderr'
+- name: Create restic credentials file
+  become: true
+  ansible.builtin.template:
+    src: restic_config.conf
+    dest: /root/.config/restic-backup.conf
+    owner: root
+    group: root
+    mode: '0600'
+- name: Create systemd oneshot unit
+  become: true
+  ansible.builtin.template:
+    src: systemd/restic-backup.service.j2
+    dest: /etc/systemd/system/restic-backup-{{ systemd.unit_suffix }}.service
+    owner: root
+    group: root
+    mode: '0644'
+- name: Create systemd timer unit
+  become: true
+  ansible.builtin.template:
+    src: systemd/restic-backup.timer.j2
+    dest: /etc/systemd/system/restic-backup-{{ systemd.unit_suffix }}.timer
+    owner: root
+    group: root
+    mode: '0644'
+- name: Enable timer
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: restic-backup-{{ systemd.unit_suffix }}.timer
+    state: started
+    enabled: true
+- name: Run backup now
+  become: true
+  when: backup_now
+  ansible.builtin.systemd:
+    name: restic-backup-{{ systemd.unit_suffix }}.service
+    state: started
