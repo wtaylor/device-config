@@ -1,0 +1,5 @@
+- name: "Create podman network - {{ network_name }}"
+  become: true
+  containers.podman.podman_network:
+    name: "{{ network_name }}"
+    state: quadlet

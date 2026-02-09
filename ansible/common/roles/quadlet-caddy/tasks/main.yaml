@@ -1,0 +1,68 @@
+- name: Ensure caddy directories exist
+  become: true
+  loop:
+  - "{{ caddy_data_dir }}"
+  - "{{ caddy_data_dir }}/config"
+  - "{{ caddy_data_dir }}/caddyfiles"
+  - "{{ caddy_data_dir }}/data"
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: "{{ caddy_user | default('caddy') }}"
+    group: "{{ caddy_group | default('caddy') }}"
+    mode: "0750"
+- name: Getent user uid
+  become: true
+  ansible.builtin.getent:
+    database: passwd
+    key: "{{ caddy_user | default('caddy') }}"
+- name: Getent group gid
+  become: true
+  ansible.builtin.getent:
+    database: group
+    key: "{{ caddy_group | default('caddy') }}"
+- name: Write Caddyfile
+  become: true
+  template:
+    src: Caddyfile.j2
+    dest: "{{ caddy_data_dir }}/caddyfiles/Caddyfile"
+    owner: "{{ caddy_user | default('caddy') }}"
+    group: "{{ caddy_group | default('caddy') }}"
+    mode: '0644'
+  vars:
+    cf_api_token: "{{ cloudflare_token }}"
+    hosts: "{{ proxy_hosts }}"
+  register: config
+- name: Create caddy quadlet service
+  become: true
+  containers.podman.podman_container:
+    name: caddy
+    state: quadlet
+    image: ghcr.io/caddybuilds/caddy-cloudflare:2.10.2
+    uidmap: ["0:{{ getent_passwd[caddy_user | default('caddy')][1] }}"]
+    gidmap: ["0:{{ getent_group[caddy_group | default('caddy')][1] }}"]
+    network: [podman, "{{ proxy_network }}.network"]
+    volume:
+    - "{{ caddy_data_dir }}/caddyfiles:/etc/caddy:z"
+    - "{{ caddy_data_dir }}/config:/config:z"
+    - "{{ caddy_data_dir }}/data:/data:z"
+    ports:
+    - "80:80"
+    - "443:443"
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor={{ requires_mounts_for }}
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+- name: Start/Reload caddy
+  become: true
+  systemd:
+    name: caddy
+    enabled: true
+    state: "{{ 'restarted' if config.changed else 'started' }}"

@@ -1,0 +1,44 @@
+- hosts: openbao-server.willtaylor.info
+  remote_user: ansible
+  vars:
+    proxy_network: proxy
+  pre_tasks:
+  - name: Mount ROOTS
+    local_action: ansible.builtin.shell
+    args:
+      chdir: "{{ playbook_dir }}"
+      cmd: "../../../scripts/mount_roots.sh"
+    changed_when: false
+  post_tasks:
+  - name: Unmount ROOTS
+    local_action: ansible.builtin.shell
+    args:
+      chdir: "{{ playbook_dir }}"
+      cmd: "../../../scripts/unmount_roots.sh"
+    changed_when: false
+  roles:
+  - role: ../../common/roles/create-system-users
+    system_users:
+    - username: openbao
+      uid: 2000
+    - username: caddy
+      uid: 2001
+  - role: ../../common/roles/prepare-disks
+    disks:
+    - serial: viscsi-vault-data
+      label: vault-data
+      mountpoint: /var/mnt/vault
+      owner: openbao
+      group: openbao
+      mode: "0700"
+  - role: ../../common/roles/quadlet-network
+    network_name: "{{ proxy_network }}"
+  - role: ./roles/configure-openbao
+    unseal_transit_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/main_vault_unseal_token') }}"
+  - role: ../../common/roles/quadlet-caddy
+    caddy_data_dir: "/var/mnt/vault/caddy"
+    cloudflare_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/cloudflare_token') }}"
+    requires_mounts_for: /var/mnt/vault
+    proxy_hosts:
+    - domain: vault.tk831.net
+      dest: http://openbao:8200

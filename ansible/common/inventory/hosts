@@ -13,6 +13,7 @@ red-one ansible_host=172.28.2.2
 container-services.willtaylor.info
 data-backup-server.willtaylor.info
 rootn.willtaylor.info
+openbao-server.willtaylor.info
 
 [all:vars]
 ansible_python_interpreter=auto_silent

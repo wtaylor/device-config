@@ -86,13 +86,12 @@
       RequiresMountsFor=/mnt/rootn
       [Service]
       ExecStart=/usr/bin/bao server -config=/mnt/rootn/openbao/config/openbao.hcl
-- name: Systemd daemon-reload
-  become: true
-  ansible.builtin.systemd:
-    daemon_reload: true
+      Restart=on-failure
+      RestartSec=5s
 - name: (Re)start openbao service
   become: true
   ansible.builtin.systemd:
     name: openbao.service
+    daemon_reload: true
     enabled: true
     state: "{{ 'restarted' if config.changed else 'started' }}"

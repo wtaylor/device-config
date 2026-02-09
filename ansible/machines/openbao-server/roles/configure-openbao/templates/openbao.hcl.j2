@@ -1,0 +1,22 @@
+listener "tcp" {
+  address       = "0.0.0.0:8200"
+  tls_disable = 1
+}
+
+storage "file" {
+  path    = "/openbao/file"
+}
+
+seal "transit" {
+  address = "https://vault.rootn.tk831.net:443"
+  token   = "{{ unseal_transit_token }}"
+  disable_renewal = "false"
+
+  key_name = "openbao-server-unseal-key"
+  mount_path = "transit/"
+  namespace = "root/"
+}
+
+disable_mlock = true
+ui = true
+

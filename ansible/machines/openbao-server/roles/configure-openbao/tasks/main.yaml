@@ -1,0 +1,61 @@
+- name: Ensure openbao directory exists
+  become: true
+  loop:
+  - /var/mnt/vault/openbao
+  - /var/mnt/vault/openbao/config
+  - /var/mnt/vault/openbao/data
+  - /var/mnt/vault/openbao/config
+  - /var/mnt/vault/openbao/logs
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: openbao
+    group: openbao
+    mode: '0700'
+- name: Copy vault configuration
+  become: true
+  ansible.builtin.template:
+    src: openbao.hcl.j2
+    dest: /var/mnt/vault/openbao/config/openbao.hcl
+    owner: openbao
+    group: openbao
+    mode: '0640'
+  register: config
+- name: Create openbao quadlet
+  become: true
+  containers.podman.podman_container:
+    name: openbao
+    state: quadlet
+    image: ghcr.io/openbao/openbao:2.5.0
+    uidmap: ["0:2000"]
+    gidmap: ["0:2000"]
+    command: ["bao", "server", "-config=/openbao/config/openbao.hcl"]
+    env:
+      SKIP_CHOWN: "true"
+      BAO_SKIP_DROP_ROOT: "true"
+    network: [podman, "{{ proxy_network }}.network"]
+    volume:
+    - /var/mnt/vault/openbao/config:/openbao/config:z
+    - /var/mnt/vault/openbao/data:/openbao/file:z
+    - /var/mnt/vault/openbao/logs:/openbao/logs:z
+    ports:
+    - "8200:8200"
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/vault
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: (Re)start openbao server service
+  become: true
+  ansible.builtin.systemd:
+    name: openbao
+    enabled: true
+    daemon_reload: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

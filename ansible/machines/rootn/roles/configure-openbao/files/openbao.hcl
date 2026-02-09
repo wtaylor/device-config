@@ -10,7 +10,7 @@ listener "tcp" {
 listener "tcp" {
   address       = "0.0.0.0:443"
 
-  tls_cert_file = "/mnt/rootn/certs/cert.pem"
+  tls_cert_file = "/mnt/rootn/certs/fullchain.pem"
   tls_key_file  = "/mnt/rootn/certs/privkey.pem"
 }
 
