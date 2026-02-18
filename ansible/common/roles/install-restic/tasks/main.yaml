@@ -1,0 +1,28 @@
+- name: Download restic
+  ansible.builtin.get_url:
+    url: https://github.com/restic/restic/releases/download/v0.18.1/restic_0.18.1_linux_amd64.bz2
+    dest: '/tmp/restic.bz2'
+    mode: "0644"
+  register: get_url_restic
+- name: Decompress restic
+  become: true
+  ansible.builtin.shell: "bzip2 -dc {{ get_url_restic.dest }} > /opt/restic"
+  args:
+    creates: /opt/restic
+- name: Ensure restic permissions are correct
+  become: true
+  ansible.builtin.file:
+    path: /opt/restic
+    mode: '0755'
+    owner: root
+    group: root
+
+# - name: Set SELinux permissions
+#   become: true
+#   ansible.builtin.sefcontext:
+#     target: "/opt(/.*)?"
+#     setype: bin_t
+#     state: present
+# - name: reload SELinux policy for /opt
+#   command: restorecon -irv /opt/
+#   changed_when: false

@@ -1,7 +1,3 @@
-- name: Install restic
-  become: true
-  ansible.builtin.apt:
-    name: [restic]
 - name: Ensure restic repository exists
   become: true
   environment:
@@ -9,7 +5,7 @@
     RESTIC_REST_USERNAME: "{{ repository.rest_username }}"
     RESTIC_REST_PASSWORD: "{{ repository.rest_password }}"
   ansible.builtin.command:
-    cmd: restic -r {{ repository.url }} init
+    cmd: /opt/restic -r {{ repository.url }} init
   register: restic_init
   changed_when:
   - restic_init.rc == 0
@@ -20,7 +16,7 @@
   become: true
   ansible.builtin.template:
     src: restic_config.conf
-    dest: /root/.config/restic-backup.conf
+    dest: "/etc/restic-{{ systemd.unit_suffix }}.conf"
     owner: root
     group: root
     mode: '0600'

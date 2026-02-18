@@ -42,3 +42,22 @@
     proxy_hosts:
     - domain: vault.tk831.net
       dest: http://openbao:8200
+  - role: ../../common/roles/install-restic
+  - role: ../../common/roles/restic-backup
+    repository:
+      url: rest:http://data-backup-server.willtaylor.info:8080/hosts/openbao-server/quadlets/openbao
+      password: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_repo_password') }}"
+      rest_username: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_rest_username') }}"
+      rest_password: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_rest_password') }}"
+    retention:
+      daily: 7
+      weekly: 4
+      monthly: 3
+      yearly: 2
+    systemd:
+      on_calendar: "*-*-* 02:00:00"
+      unit_suffix: openbao
+    backup_now: true
+    directories:
+    - /var/mnt/vault/openbao/config
+    - /var/mnt/vault/openbao/data

@@ -4,7 +4,6 @@
   - /var/mnt/vault/openbao
   - /var/mnt/vault/openbao/config
   - /var/mnt/vault/openbao/data
-  - /var/mnt/vault/openbao/config
   - /var/mnt/vault/openbao/logs
   ansible.builtin.file:
     path: "{{ item }}"

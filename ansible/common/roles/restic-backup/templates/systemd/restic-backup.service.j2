@@ -2,6 +2,7 @@
 Description=Restic backup
 [Service]
 Type=oneshot
-ExecStart=restic backup -r {{ repository.url }} {{ directories | join(' ') }}
-ExecStartPost=restic forget -r {{ repository.url }} --keep-daily {{ retention.daily }} --keep-weekly {{ retention.weekly }} --keep-monthly {{ retention.monthly }} --keep-yearly {{ retention.yearly }} --prune
-EnvironmentFile=%h/.config/restic-backup.conf
+ExecStart=/opt/restic backup -r {{ repository.url }} {{ directories | join(' ') }}
+ExecStartPost=/opt/restic forget -r {{ repository.url }} --keep-daily {{ retention.daily }} --keep-weekly {{ retention.weekly }} --keep-monthly {{ retention.monthly }} --keep-yearly {{ retention.yearly }} --prune
+EnvironmentFile=/etc/restic-{{ systemd.unit_suffix }}.conf
+User=root
