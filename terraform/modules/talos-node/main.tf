@@ -16,7 +16,7 @@ resource "proxmox_virtual_environment_vm" "node_vm" {
   vm_id     = var.vm_id
 
   machine       = "q35"
-  scsi_hardware = "virtio-scsi-single"
+  scsi_hardware = "virtio-scsi-pci"
 
   boot_order = ["scsi0", "ide0", "net0"]
 

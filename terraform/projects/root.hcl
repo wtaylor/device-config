@@ -6,9 +6,6 @@ terraform {
       AWS_RESPONSE_CHECKSUM_VALIDATION = "when_required"
       AWS_ACCESS_KEY_ID = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "keyID")}"
       AWS_SECRET_ACCESS_KEY = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "applicationKey")}"
-      PROXMOX_VE_USERNAME = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "keyID")}"
-      PROXMOX_VE_PASSWORD = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "keyID")}"
-      PROXMOX_VE_SSH_USERNAME = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "keyID")}"
       VAULT_ADDR = "https://vault.willtaylor.info"
     }
   }

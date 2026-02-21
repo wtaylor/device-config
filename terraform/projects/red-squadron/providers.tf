@@ -43,7 +43,7 @@ provider "kubectl" {
 }
 
 provider "proxmox" {
-  endpoint = "https://tardis.willtaylor.info:8006"
+  endpoint = "https://red-one.willtaylor.info:8006"
   insecure = true
 
   ssh {
