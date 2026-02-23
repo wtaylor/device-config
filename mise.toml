@@ -17,6 +17,7 @@ uv_venv_auto = true
 
 [env]
 _.python.venv = { path = ".venv", create = true }
+VAULT_ADDR = "https://vault.tk831.net"
 
 [tasks.ansible_playbook]
 run = 'ansible-playbook -i ansible/common/inventory/ ansible/machines/{{arg(name="machine_playbook")}}'

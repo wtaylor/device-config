@@ -6,7 +6,7 @@ terraform {
       AWS_RESPONSE_CHECKSUM_VALIDATION = "when_required"
       AWS_ACCESS_KEY_ID = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "keyID")}"
       AWS_SECRET_ACCESS_KEY = "${run_cmd("--terragrunt-quiet", "../../../scripts/vault_get_secret.sh", "system/device-config/terraform-backend-credentials", "applicationKey")}"
-      VAULT_ADDR = "https://vault.willtaylor.info"
+      VAULT_ADDR = "https://vault.tk831.net"
     }
   }
 }

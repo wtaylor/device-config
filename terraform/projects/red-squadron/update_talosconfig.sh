@@ -8,7 +8,7 @@ trap "popd" EXIT
 unset VAULT_USERNAME
 unset VAULT_PASSWORD
 
-export VAULT_ADDR="https://vault.willtaylor.info"
+export VAULT_ADDR="https://vault.tk831.net"
 
 if vault token lookup >/dev/null; then
 	echo "Already logged in to vault in skipping vault login"
@@ -23,5 +23,5 @@ export AWS_SECRET_ACCESS_KEY="$(vault kv get -mount=kv -field=applicationKey sys
 
 mkdir -p ~/.talos
 
-terraform output -raw talos_client_config >~/.talos/config
+terragrunt output -raw talos_client_config >~/.talos/config
 talosctl kubeconfig

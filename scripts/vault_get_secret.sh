@@ -3,7 +3,7 @@
 unset VAULT_USERNAME
 unset VAULT_PASSWORD
 
-export VAULT_ADDR="https://vault.willtaylor.info"
+export VAULT_ADDR="https://vault.tk831.net"
 
 if [ -z "$1" ]; then
 	exit 1

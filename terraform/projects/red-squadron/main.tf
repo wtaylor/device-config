@@ -209,13 +209,22 @@ resource "vault_kubernetes_auth_backend_config" "red_squadron" {
   issuer                 = talos_cluster_kubeconfig.red_squadron_talos.kubernetes_client_configuration.host
 }
 
+resource "vault_policy" "external_secrets" {
+  name   = "kubernetes-external-secrets"
+  policy = <<EOF
+# Read kv/services
+path "kv/services/*" { capabilities = ["read", "list"] }
+path "kv/data/services/*" { capabilities = ["read", "list"] }
+EOF
+}
+
 resource "vault_kubernetes_auth_backend_role" "red_squadron" {
   backend                          = vault_auth_backend.kubernetes.path
   role_name                        = "external-secrets-css"
   bound_service_account_names      = ["eso-vault-css"]
   bound_service_account_namespaces = ["external-secrets"]
   token_ttl                        = 3600
-  token_policies                   = ["kubernetes-external-secrets"]
+  token_policies                   = [vault_policy.external_secrets.name]
   alias_name_source                = "serviceaccount_name"
 }
 

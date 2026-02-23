@@ -17,5 +17,5 @@ openbao-server.willtaylor.info
 
 [all:vars]
 ansible_python_interpreter=auto_silent
-vault_address=https://vault.willtaylor.info
+vault_address=https://vault.tk831.net
 vault_secret_mount=kv
