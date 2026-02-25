@@ -1,6 +1,0 @@
-- name: Install podman and dependencies
-  become: true
-  apt:
-    state: present
-    name:
-    - podman

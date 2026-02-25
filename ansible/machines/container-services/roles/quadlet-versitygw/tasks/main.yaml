@@ -1,0 +1,70 @@
+- name: Ensure versitygw directories exist
+  become: true
+  loop:
+  - /var/mnt/versitygw/data
+  - /var/mnt/versitygw/data/current
+  - /var/mnt/versitygw/data/versioned
+  - /var/mnt/versitygw/data/iam
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: versitygw
+    group: versitygw
+    mode: '0700'
+- name: Create versitygw_root_access_key secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: versitygw_root_access_key
+    data: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/versitygw/root-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.access_key }}"
+- name: Create versitygw_root_secret_key secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: versitygw_root_secret_key
+    data: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'services/versitygw/root-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.secret_key }}"
+- name: Create versitygw quadlet
+  become: true
+  containers.podman.podman_container:
+    name: versitygw
+    state: quadlet
+    image: ghcr.io/versity/versitygw:v1.2.0
+    uidmap: ["0:2005"]
+    gidmap: ["0:2005"]
+    command:
+    - --port=:8080
+    - --webui=:8081
+    - --webui-no-tls=true
+    - --iam-dir=/mnt/data/iam
+    - posix
+    - /mnt/data/current
+    - --versioning-dir=/mnt/data/versioned
+    - --dir-perms=0750
+    secrets:
+    - versitygw_root_access_key,type=env,target=ROOT_ACCESS_KEY
+    - versitygw_root_secret_key,type=env,target=ROOT_SECRET_KEY
+    network: [podman, "{{ proxy_network }}.network"]
+    volume:
+    - /var/mnt/versitygw/data:/mnt/data:z
+    ports:
+    - "8080:8080"
+    - "8081:8081"
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/versitygw/data
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: (Re)start versitygw service
+  become: true
+  ansible.builtin.systemd:
+    name: versitygw
+    enabled: true
+    daemon_reload: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

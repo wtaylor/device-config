@@ -1,9 +1,10 @@
-- hosts: docker-services.willtaylor.info
+- hosts: container-services.willtaylor.info
   remote_user: wtaylor
+  vars:
+    proxy_network: proxy
   roles:
-  # - role: ../../common/roles/update-system
   # - role: ../../common/roles/create-system-users
-  #   users:
+  #   system_users:
   #   - username: caddy
   #     uid: 2000
   #   - username: vector
@@ -14,46 +15,56 @@
   #     uid: 2003
   #   - username: grafana
   #     uid: 2004
-  #   - username: seaweedfs
+  #   - username: versitygw
   #     uid: 2005
-  #   - username: openbau
-  #     uid: 2006
-  # - role: ../../common/roles/prepare-disk
+  # - role: ../../common/roles/prepare-disks
   #   disks:
-  #   - serial: viscsi-traefik-data
-  #     mountpoint: /mnt/caddy/data
+  #   - serial: viscsi-caddy-data
+  #     label: caddy-data
+  #     mountpoint: /var/mnt/caddy/data
   #     owner: caddy
+  #     mode: "0700"
   #   - serial: viscsi-vl-data
-  #     mountpoint: /mnt/victoria-logs/data
+  #     label: victoria-logs-data
+  #     mountpoint: /var/mnt/victorialogs/data
   #     owner: victoria-logs
+  #     mode: "0700"
   #   - serial: viscsi-vm-data
-  #     mountpoint: /mnt/victoria-metrics/data
+  #     label: victoria-metrics-data
+  #     mountpoint: /var/mnt/victoriametrics/data
   #     owner: victoria-metrics
+  #     mode: "0700"
   #   - serial: viscsi-grafana-data
-  #     mountpoint: /mnt/grafana/data
+  #     label: grafana-data
+  #     mountpoint: /var/mnt/grafana/data
   #     owner: grafana
+  #     mode: "0700"
   #   - serial: viscsi-vector-data
-  #     mountpoint: /mnt/vector/data
+  #     label: vector-data
+  #     mountpoint: /var/mnt/vector/data
   #     owner: vector
-  #   - serial: viscsi-sfs-m-data
-  #     mountpoint: /mnt/seaweedfs/metadata
-  #     owner: seaweedfs
-  #   - serial: viscsi-sfs-ssdv-data
-  #     mountpoint: /mnt/seaweedfs/volumes/ssd
-  #     owner: seaweedfs
-  #   - serial: viscsi-sfs-hddv-data
-  #     mountpoint: /mnt/seaweedfs/volumes/hdd
-  #     owner: seaweedfs
-  #   - serial: viscsi-openbau-data
-  #     mountpoint: /mnt/openbau/data
-  #     owner: openbau
-  # - role: ./roles/configure-podman
-  # - role: ./roles/create-network
+  #     mode: "0700"
+  #   - serial: viscsi-vs3-data
+  #     label: versitygw-data
+  #     fstype: xfs
+  #     mountpoint: /var/mnt/versitygw/data
+  #     owner: versitygw
+  #     mode: "0700"
+  - role: ../../common/roles/quadlet-network
+    network_name: "{{ proxy_network }}"
+  - role: ./roles/quadlet-versitygw
+  # - role: ../../common/roles/quadlet-network
   #   network_name: observability-stack
-  # - role: ./roles/create-network
-  #   network_name: proxy
-  # - role: ./roles/deploy-caddy
   # - role: ./roles/deploy-victoria-logs
   # - role: ./roles/deploy-victoria-metrics
   # - role: ./roles/deploy-vector-aggregator
-  - role: ./roles/deploy-grafana
+  # - role: ./roles/deploy-grafana
+  - role: ../../common/roles/quadlet-caddy
+    caddy_data_dir: "/var/mnt/caddy/data"
+    cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
+    requires_mounts_for: /var/mnt/caddy/data
+    proxy_hosts:
+    - domain: s3.tk831.net
+      dest: http://versitygw:8080
+    - domain: ui.s3.tk831.net
+      dest: http://versitygw:8081

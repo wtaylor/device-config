@@ -64,5 +64,6 @@
   become: true
   systemd:
     name: caddy
+    daemon_reload: true
     enabled: true
     state: "{{ 'restarted' if config.changed else 'started' }}"

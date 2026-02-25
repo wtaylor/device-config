@@ -5,7 +5,7 @@
     RESTIC_REST_USERNAME: "{{ repository.rest_username }}"
     RESTIC_REST_PASSWORD: "{{ repository.rest_password }}"
   ansible.builtin.command:
-    cmd: /opt/restic -r {{ repository.url }} init
+    cmd: restic -r {{ repository.url }} init
   register: restic_init
   changed_when:
   - restic_init.rc == 0

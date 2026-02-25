@@ -4,19 +4,22 @@
     lsblk -o id-link,name,serial -SJ | jq -r '.blockdevices[] | select(.serial == "{{ disk.serial }}") | .["id-link"]'
   changed_when: false
   register: disk_device_command
-- name: Create a new ext4 primary partition
+- name: Set fstype or default to ext4
+  ansible.builtin.set_fact:
+    fstype: "{{ disk.fstype | default('ext4') }}"
+- name: Create a new {{ fstype }} primary partition
   become: true
   community.general.parted:
     device: "/dev/disk/by-id/{{ disk_device_command.stdout }}"
     number: 1
     state: present
-    fs_type: ext4
+    fs_type: "{{ fstype }}"
     label: gpt
     name: "{{ disk.label }}"
-- name: "Create a ext4 filesystem on /dev/disk/by-id/{{ disk_device_command.stdout }}-part1"
+- name: "Create a {{ fstype }} filesystem on /dev/disk/by-id/{{ disk_device_command.stdout }}-part1"
   become: true
   community.general.filesystem:
-    fstype: ext4
+    fstype: "{{ fstype }}"
     dev: "/dev/disk/by-id/{{ disk_device_command.stdout }}-part1"
 - name: Find id of primary partition - {{ disk.serial }}
   become: true
@@ -36,7 +39,7 @@
       [Mount]
       What=/dev/disk/by-uuid/{{ disk_fs_uuid_command.stdout }}
       Where={{ disk.mountpoint }}
-      Type=ext4
+      Type={{ fstype }}
       Options=defaults
 
       [Install]
