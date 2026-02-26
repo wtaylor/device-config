@@ -1,3 +1,13 @@
+- name: Ensure Victoria Metrics directories exist
+  become: true
+  loop:
+  - /var/mnt/victoriametrics/data
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: victoria-metrics
+    group: victoria-metrics
+    mode: '0700'
 - name: Create Victoria Metrics quadlet
   become: true
   containers.podman.podman_container:
@@ -9,11 +19,17 @@
     - -storageDataPath=/mnt/data
     - -retentionPeriod=4w
     volume:
-    - /mnt/victoria-metrics/data:/mnt/data:Z
+    - /var/mnt/victoriametrics/data:/mnt/data:Z
     network:
+    - podman
     - observability-stack.network
+    ports:
+    - "8428:8428"
     quadlet_options:
     - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/victoriametrics/data
+
       [Service]
       Restart=on-failure
       RestartSec=5s

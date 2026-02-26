@@ -1,3 +1,13 @@
+- name: Ensure victoria-logs directories exist
+  become: true
+  loop:
+  - /var/mnt/victorialogs/data
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: victoria-logs
+    group: victoria-logs
+    mode: '0700'
 - name: Create Victoria Logs quadlet
   become: true
   containers.podman.podman_container:
@@ -9,11 +19,17 @@
     - -storageDataPath=/mnt/data
     - -retention.maxDiskSpaceUsageBytes=100GiB
     volume:
-    - /mnt/victoria-logs/data:/mnt/data:Z
+    - /var/mnt/victorialogs/data:/mnt/data:Z
     network:
+    - podman
     - observability-stack.network
+    ports:
+    - "9428:9428"
     quadlet_options:
     - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/victorialogs/data
+
       [Service]
       Restart=on-failure
       RestartSec=5s

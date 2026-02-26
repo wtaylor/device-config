@@ -1,19 +1,13 @@
-- name: Ensure Grafana data directory exists
+- name: Ensure Grafana directories exist
   become: true
+  loop:
+  - /var/mnt/grafana/data
   ansible.builtin.file:
-    path: /mnt/grafana/data
+    path: "{{ item }}"
     state: directory
     owner: grafana
     group: grafana
-    mode: '0750'
-- name: Ensure Grafana provisioning directory exists
-  become: true
-  ansible.builtin.file:
-    path: /mnt/grafana/provisioning
-    state: directory
-    owner: grafana
-    group: grafana
-    mode: '0750'
+    mode: '0700'
 - name: Create Grafana quadlet
   become: true
   containers.podman.podman_container:
@@ -23,14 +17,18 @@
     uidmap: ["472:2004", "0:3000"]
     gidmap: ["0:2004"]
     volume:
-    - /mnt/grafana/data:/var/lib/grafana:Z
-    - /mnt/grafana/provisioning:/etc/grafana/provisioning:Z
+    - /var/mnt/grafana/data:/var/lib/grafana:z
     network:
     - observability-stack.network
     - proxy.network
     - podman
+    ports:
+    - "3000:3000"
     quadlet_options:
     - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/grafana/data
+
       [Service]
       Restart=on-failure
       RestartSec=5s
