@@ -2,9 +2,11 @@
 Description=Restic backup timer
 
 [Timer]
-OnCalendar=*-*-* 02:00:00
+OnCalendar={{ systemd.on_calendar }}
 Persistent=true
 Unit=restic-backup-{{ systemd.unit_suffix }}.service
+RandomizedDelaySec=1h
+FixedRandomDelay=true
 
 [Install]
 WantedBy=default.target
