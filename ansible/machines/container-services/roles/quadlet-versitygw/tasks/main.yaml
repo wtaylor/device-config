@@ -10,7 +10,7 @@
     state: directory
     owner: versitygw
     group: versitygw
-    mode: '0700'
+    mode: '0750'
 - name: Create versitygw_root_access_key secret
   become: true
   containers.podman.podman_secret:

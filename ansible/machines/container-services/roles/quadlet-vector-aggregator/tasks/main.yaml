@@ -1,7 +1,11 @@
-- name: Ensure vector configuration directory exists
+- name: Ensure Vector directories exist
   become: true
+  loop:
+  - /var/mnt/vector/data
+  - /var/mnt/vector/data/config
+  - /var/mnt/vector/data/data
   ansible.builtin.file:
-    path: /mnt/vector/config
+    path: "{{ item }}"
     state: directory
     owner: vector
     group: vector
@@ -10,10 +14,11 @@
   become: true
   ansible.builtin.copy:
     src: vector.yaml
-    dest: /mnt/vector/config/vector.yaml
+    dest: /var/mnt/vector/data/config/vector.yaml
     owner: vector
     group: vector
     mode: '0640'
+  register: config
 - name: Create Vector Aggregator quadlet
   become: true
   containers.podman.podman_container:
@@ -22,12 +27,23 @@
     image: docker.io/timberio/vector:0.52.0-debian
     uidmap: ["0:2001"]
     volume:
-    - /mnt/vector/data:/mnt/data:Z
-    - /mnt/vector/config:/etc/vector:ro,Z
+    - /var/mnt/vector/data/data:/mnt/data:z
+    - /var/mnt/vector/data/config:/etc/vector:ro,z
     network:
+    - podman
     - observability-stack.network
+    ports:
+    - "8687:8687"
+    - "6000:6000"
+    - "6001:6001"
+    - "9090:9090"
+    - "6050:6050"
+    - "6051:6051"
     quadlet_options:
     - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/vector/data
+
       [Service]
       Restart=on-failure
       RestartSec=5s
@@ -35,13 +51,10 @@
       [Install]
       WantedBy=default.target
   register: container_definition
-- name: systemd daemon-reload
-  become: true
-  ansible.builtin.systemd:
-    daemon_reload: true
 - name: (Re)start vector-aggregator service
   become: true
   ansible.builtin.systemd:
     name: vector-aggregator
+    daemon_reload: true
     enabled: true
-    state: "{{ 'restarted' if container_definition.changed else 'started' }}"
+    state: "{{ 'restarted' if (container_definition.changed or config.changed) else 'started' }}"

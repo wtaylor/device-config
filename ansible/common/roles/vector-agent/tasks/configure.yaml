@@ -1,4 +1,5 @@
 - name: Ensure vector directories exists
+  become: true
   file:
     state: directory
     path: "{{ item }}"
@@ -9,6 +10,7 @@
   - /opt/vector/config
   - /opt/vector/data
 - name: Ensure Systemd vector.service.d Directory Exists
+  become: true
   ansible.builtin.file:
     name: /etc/systemd/system/vector.service.d
     state: directory
@@ -16,6 +18,7 @@
     group: root
     mode: '0755'
 - name: Override vector.service Systemd Unit
+  become: true
   copy:
     dest: /etc/systemd/system/vector.service.d/override.conf
     owner: root
@@ -31,13 +34,14 @@
       ExecReload=/usr/bin/vector validate /opt/vector/config/vector.yaml
       ExecReload=/bin/kill -HUP $MAINPID
 - name: Copy Vector Config File
+  become: true
   copy:
     content: "{{ vector_config | to_nice_yaml }}"
     dest: /opt/vector/config/vector.yaml
     owner: vector
     group: vector
     mode: '0640'
-  notify: Reload Vector
+  notify: Restart Vector
 - name: Enable Vector Service
   become: true
   ansible.builtin.systemd:

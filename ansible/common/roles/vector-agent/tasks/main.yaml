@@ -1,4 +1,5 @@
-- name: Install
-  ansible.builtin.import_tasks: install.yaml
+- name: Install Vector
+  when: install | default(false)
+  include_tasks: "install/distribution/{{ ansible_facts['distribution'] | lower }}.yaml"
 - name: Configure
   ansible.builtin.import_tasks: configure.yaml

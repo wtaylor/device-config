@@ -7,7 +7,7 @@
     state: directory
     owner: victoria-metrics
     group: victoria-metrics
-    mode: '0700'
+    mode: '0750'
 - name: Create Victoria Metrics quadlet
   become: true
   containers.podman.podman_container:

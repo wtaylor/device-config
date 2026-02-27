@@ -1,5 +1,5 @@
-- name: Reload Vector
+- name: Restart Vector
   become: true
   ansible.builtin.systemd:
     name: vector
-    state: reloaded
+    state: restarted

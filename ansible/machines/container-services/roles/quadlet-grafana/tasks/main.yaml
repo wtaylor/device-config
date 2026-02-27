@@ -7,7 +7,7 @@
     state: directory
     owner: grafana
     group: grafana
-    mode: '0700'
+    mode: '0750'
 - name: Create Grafana quadlet
   become: true
   containers.podman.podman_container:

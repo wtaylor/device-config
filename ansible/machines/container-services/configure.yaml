@@ -23,33 +23,33 @@
   #     label: caddy-data
   #     mountpoint: /var/mnt/caddy/data
   #     owner: caddy
-  #     mode: "0700"
+  #     mode: "0750"
   #   - serial: viscsi-vl-data
   #     label: victoria-logs-data
   #     mountpoint: /var/mnt/victorialogs/data
   #     owner: victoria-logs
-  #     mode: "0700"
+  #     mode: "0750"
   #   - serial: viscsi-vm-data
   #     label: victoria-metrics-data
   #     mountpoint: /var/mnt/victoriametrics/data
   #     owner: victoria-metrics
-  #     mode: "0700"
+  #     mode: "0750"
   #   - serial: viscsi-grafana-data
   #     label: grafana-data
   #     mountpoint: /var/mnt/grafana/data
   #     owner: grafana
-  #     mode: "0700"
+  #     mode: "0750"
   #   - serial: viscsi-vector-data
   #     label: vector-data
   #     mountpoint: /var/mnt/vector/data
   #     owner: vector
-  #     mode: "0700"
+  #     mode: "0750"
   #   - serial: viscsi-vs3-data
   #     label: versitygw-data
   #     fstype: xfs
   #     mountpoint: /var/mnt/versitygw/data
   #     owner: versitygw
-  #     mode: "0700"
+  #     mode: "0750"
   # - role: ../../common/roles/quadlet-network
   #   network_name: "{{ proxy_network }}"
   # - role: ./roles/quadlet-versitygw
@@ -57,16 +57,50 @@
   #   network_name: observability-stack
   # - role: ./roles/quadlet-victoria-logs
   # - role: ./roles/quadlet-victoria-metrics
-  # - role: ./roles/quadlet-vector-aggregator
-  - role: ./roles/quadlet-grafana
-  - role: ../../common/roles/quadlet-caddy
-    caddy_data_dir: "/var/mnt/caddy/data"
-    cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
-    requires_mounts_for: /var/mnt/caddy/data
-    proxy_hosts:
-    - domain: s3.tk831.net
-      dest: http://versitygw:8080
-    - domain: ui.s3.tk831.net
-      dest: http://versitygw:8081
-    - domain: grafana.tk831.net
-      dest: http://grafana:3000
+  - role: ./roles/quadlet-vector-aggregator
+  # - role: ./roles/quadlet-grafana
+  # - role: ../../common/roles/quadlet-caddy
+  #   caddy_data_dir: "/var/mnt/caddy/data"
+  #   cloudflare_token: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/nas-rp-server/cloudflare-credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.api_token }}"
+  #   requires_mounts_for: /var/mnt/caddy/data
+  #   proxy_hosts:
+  #   - domain: s3.tk831.net
+  #     dest: http://versitygw:8080
+  #   - domain: ui.s3.tk831.net
+  #     dest: http://versitygw:8081
+  #   - domain: grafana.tk831.net
+  #     dest: http://grafana:3000
+  - role: ../../common/roles/vector-agent
+    vector_config:
+      data_dir: /opt/vector/data
+      api:
+        enabled: true
+      schema:
+        log_namespace: true
+      sources:
+        vector_logs:
+          type: internal_logs
+        journald:
+          type: journald
+      transforms:
+        mapped_journal_logs:
+          type: remap
+          inputs: [journald]
+          source: |-
+            .message = .
+            .timestamp = %journald.timestamp
+            .host = %journald.host
+            .service = %journald.metadata._SYSTEMD_UNIT
+      sinks:
+        console:
+          type: console
+          inputs: ["vector_logs"]
+          encoding:
+            codec: text
+        vector_server:
+          type: vector
+          inputs: ["mapped_journal_logs"]
+          address: http://vector.tk831.net:6001
+          version: "2"
+          tls:
+            enabled: false
