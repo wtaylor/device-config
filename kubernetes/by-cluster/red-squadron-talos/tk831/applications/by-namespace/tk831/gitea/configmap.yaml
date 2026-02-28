@@ -86,9 +86,9 @@ data:
 
     [storage]
     STORAGE_TYPE            = minio
-    MINIO_ENDPOINT          = s3.willtaylor.info
-    MINIO_BUCKET            = ssd-gitea
-    MINIO_LOCATION          = eu-west-1
+    MINIO_ENDPOINT          = s3.tk831.net
+    MINIO_BUCKET            = gitea
+    MINIO_LOCATION          = us-east-1
     MINIO_USE_SSL           = true
-    MINIO_ACCESS_KEY_ID     = pZ9u6madMdk4Mf43VkJ8yx9Y
-    MINIO_SECRET_ACCESS_KEY = 8FxTtzqRHvptGdNK8qDmQVHi
+    MINIO_ACCESS_KEY_ID     = GITEAHDPMIGZBC73WZP
+    MINIO_SECRET_ACCESS_KEY = TBgnIoJJWq7p5YI=GlCQMr1C/8B3zrluOfLM9Nfx
