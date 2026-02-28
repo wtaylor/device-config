@@ -50,6 +50,13 @@ spec:
       login: true
       passwordSecret:
         name: postgres-tk831-default-role-paperless
+    - name: joplin
+      ensure: present
+      comment: Joplin app user
+      superuser: false
+      login: true
+      passwordSecret:
+        name: postgres-tk831-default-role-joplin
   resources:
     requests:
       memory: "512Mi"
