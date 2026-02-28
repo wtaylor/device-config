@@ -1,0 +1,87 @@
+apiVersion: external-secrets.io/v1beta1
+kind: ExternalSecret
+metadata:
+  name: postgres-backup-postgres-default-restic-credentials
+spec:
+  secretStoreRef:
+    name: vault
+    kind: ClusterSecretStore
+  refreshInterval: 5m
+  target:
+    deletionPolicy: Delete
+  data:
+  - secretKey: restUsername
+    remoteRef:
+      key: services/volsync/rclone-credentials
+      property: username
+  - secretKey: restPassword
+    remoteRef:
+      key: services/volsync/rclone-credentials
+      property: password
+  - secretKey: repoPassword
+    remoteRef:
+      key: services/volsync/restic-credentials
+      property: password
+---
+apiVersion: batch/v1
+kind: CronJob
+metadata:
+  name: postgres-backup-postgres-default
+spec:
+  schedule: "00 1 * * *"
+  jobTemplate:
+    spec:
+      template:
+        spec:
+          containers:
+          - name: backup
+            image: ghcr.io/wtaylor/postgres-restic:latest
+            imagePullPolicy: Always
+            volumeMounts:
+            - name: backup-staging
+              mountPath: /mnt/pg_dump
+            env:
+            - name: DUMP_ROOT
+              value: /mnt/pg_dump
+            - name: RESTIC_REST_USERNAME
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-postgres-default-restic-credentials
+                  key: restUsername
+            - name: RESTIC_REST_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-postgres-default-restic-credentials
+                  key: restPassword
+            - name: RESTIC_PASSWORD
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-backup-postgres-default-restic-credentials
+                  key: repoPassword
+            - name: RESTIC_REPOSITORY_1
+              value: rest:http://data-backup-server.willtaylor.info:8080/databases/postgres/clusters/cnpg-postgres-default
+            - name: PGHOST_1
+              value: postgres-tk831-default-rw.tk831.svc.cluster.local
+            - name: PGUSER_1
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-default-admin-credentials
+                  key: username
+            - name: PGPASSWORD_1
+              valueFrom:
+                secretKeyRef:
+                  name: postgres-default-admin-credentials
+                  key: password
+            - name: PGPORT_1
+              value: "5432"
+          volumes:
+          - name: backup-staging
+            ephemeral:
+              volumeClaimTemplate:
+                spec:
+                  accessModes: [ReadWriteOnce]
+                  storageClassName: proxmox-zfs
+                  resources:
+                    requests:
+                      storage: 50Gi
+          restartPolicy: OnFailure
