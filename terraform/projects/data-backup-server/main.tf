@@ -15,10 +15,6 @@ resource "proxmox_virtual_environment_file" "ignition" {
     path      = local.ignition_file
     file_name = "data-backup-server.ign"
   }
-
-  lifecycle {
-    replace_triggered_by = [terraform_data.ignition_hash]
-  }
 }
 
 resource "terraform_data" "ignition_hash" {

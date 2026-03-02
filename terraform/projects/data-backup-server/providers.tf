@@ -9,6 +9,10 @@ terraform {
       source  = "hashicorp/vault"
       version = "5.6.0"
     }
+    hcloud = {
+      source  = "hetznercloud/hcloud"
+      version = "~> 1.45"
+    }
   }
 }
 
@@ -21,3 +25,4 @@ provider "proxmox" {
     private_key = file("~/.ssh/id_ed25519")
   }
 }
+
