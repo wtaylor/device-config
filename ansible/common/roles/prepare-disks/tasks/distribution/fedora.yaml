@@ -1,7 +1,0 @@
-- name: Install dependencies
-  become: true
-  community.general.rpm_ostree_pkg:
-    name:
-    - parted
-    state: present
-    apply_live: true

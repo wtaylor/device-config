@@ -1,0 +1,77 @@
+- name: Ensure rclone-sync directories exist
+  become: true
+  loop:
+  - /var/mnt/backup/data/rclone-sync
+  - /var/mnt/backup/data/rclone-sync/config
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: rclone
+    mode: '0770'
+- name: Create rclone-sync config
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [storage_box]
+      type = sftp
+      host = u555811.your-storagebox.de
+      user = u555811
+      key_file = /config/rclone/ssh.key
+    dest: /var/mnt/backup/data/rclone-sync/config/rclone.conf
+    owner: root
+    group: rclone
+    mode: '0640'
+- name: Create rclone-sync ssh key
+  become: true
+  ansible.builtin.copy:
+    content: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/device-config/data-backup-server/storage-box-ssh', url=vault_address, engine_mount_point=vault_secret_mount)).secret.privateKey }}"
+    dest: /var/mnt/backup/data/rclone-sync/config/ssh.key
+    owner: root
+    group: rclone
+    mode: '0640'
+- name: Create rclone-sync quadlet
+  become: true
+  containers.podman.podman_container:
+    name: rclone-sync
+    state: quadlet
+    image: ghcr.io/rclone/rclone:1.72.1
+    uidmap: ["0:2001"]
+    gidmap: ["0:2500"]
+    command: [sync, /mnt/data, 'storage_box:data-backup-server']
+    volume:
+    - /var/mnt/backup/data/restic:/mnt/data/restic:z
+    - /var/mnt/backup/data/rclone-sync/config:/config/rclone:z
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/backup/data
+
+      [Service]
+      Type=oneshot
+  register: container_definition
+- name: Create systemd timer unit
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=rclone-sync timer
+
+      [Timer]
+      OnCalendar={{ systemd.on_calendar }}
+      Persistent=true
+      Unit=rclone-sync.service
+
+      [Install]
+      WantedBy=default.target
+    dest: /etc/systemd/system/rclone-sync.timer
+    owner: root
+    group: root
+    mode: '0644'
+- name: Enable timer
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: rclone-sync.timer
+    state: started
+    enabled: true

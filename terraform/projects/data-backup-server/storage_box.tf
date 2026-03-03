@@ -31,6 +31,13 @@ resource "hcloud_storage_box" "backup_server" {
   access_settings = {
     reachable_externally = true
     ssh_enabled          = true
+    zfs_enabled          = true
+  }
+
+  snapshot_plan = {
+    max_snapshots = 14
+    hour          = 12
+    minute        = 0
   }
 
   lifecycle {
