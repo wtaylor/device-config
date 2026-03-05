@@ -42,7 +42,6 @@
     proxy_hosts:
     - domain: vault.tk831.net
       dest: http://openbao:8200
-  - role: ../../common/roles/install-restic
   - role: ../../common/roles/restic-backup
     repository:
       url: rest:http://data-backup-server.willtaylor.info:8080/hosts/openbao-server/quadlets/openbao
@@ -61,3 +60,4 @@
     directories:
     - /var/mnt/vault/openbao/config
     - /var/mnt/vault/openbao/data
+    - /var/mnt/vault/medusa/export

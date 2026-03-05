@@ -5,6 +5,8 @@
   - /var/mnt/vault/openbao/config
   - /var/mnt/vault/openbao/data
   - /var/mnt/vault/openbao/logs
+  - /var/mnt/vault/medusa/config
+  - /var/mnt/vault/medusa/export
   ansible.builtin.file:
     path: "{{ item }}"
     state: directory
@@ -58,3 +60,67 @@
     enabled: true
     daemon_reload: true
     state: "{{ 'restarted' if container_definition.changed else 'started' }}"
+- name: Create medusa token secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: medusa_vault_token
+    data: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/medusa_token') }}"
+- name: Create medusa-export public key
+  become: true
+  ansible.builtin.copy:
+    content: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/medusa_public_key') }}"
+    dest: /var/mnt/vault/medusa/config/public.key
+    owner: openbao
+    group: openbao
+    mode: '0640'
+- name: Create medusa-export quadlet
+  become: true
+  containers.podman.podman_container:
+    name: medusa-export
+    state: quadlet
+    image: ghcr.io/jonasvinther/medusa@sha256:bc4696d3328bed5a0712318d643766e36c87d2ae836d14170d010df6abf0447d # 0.7.3
+    user: "0:0"
+    uidmap: ["0:2000"]
+    gidmap: ["0:974"]
+    secrets:
+    - medusa_vault_token,type=env,target=VAULT_TOKEN
+    env:
+      VAULT_ADDR: https://vault.tk831.net
+    volume:
+    - /var/mnt/vault/medusa/config:/mnt/config:z
+    - /var/mnt/vault/medusa/export:/mnt/export:z
+    command: [export, kv, -e, -p, /mnt/config/public.key, -o, /mnt/export/openbao-server]
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/vault
+
+      [Service]
+      Type=oneshot
+  register: container_definition
+- name: Create medusa-export timer unit
+  become: true
+  ansible.builtin.copy:
+    content: |
+      [Unit]
+      Description=medusa-export timer
+
+      [Timer]
+      OnCalendar=*-*-* 01:00:00
+      Persistent=true
+      Unit=medusa-export.service
+
+      [Install]
+      WantedBy=default.target
+    dest: /etc/systemd/system/medusa-export.timer
+    owner: root
+    group: root
+    mode: '0644'
+- name: Enable timer
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+    name: medusa-export.timer
+    state: started
+    enabled: true
