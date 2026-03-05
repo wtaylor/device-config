@@ -1,0 +1,58 @@
+data_dir: /vector-data-dir
+api:
+  enabled: false
+  address: 127.0.0.1:8686
+  playground: false
+schema:
+  log_namespace: true
+sources:
+  kubernetes_logs:
+    type: kubernetes_logs
+  host_metrics:
+    type: host_metrics
+    filesystem:
+      devices:
+        excludes: [binfmt_misc]
+      filesystems:
+        excludes: [binfmt_misc]
+      mountPoints:
+        excludes: ["*/proc/sys/fs/binfmt_misc"]
+  vector_internal_metrics:
+    type: internal_metrics
+    scrape_interval_secs: 60
+transforms:
+  vl_kubernetes_logs:
+    type: remap
+    inputs: [kubernetes_logs]
+    source: |-
+      .message = .
+      .timestamp = %kubernetes_logs.timestamp
+
+      if exists(%kubernetes_logs.pod_labels."app.kubernetes.io/name") {
+        .service = %kubernetes_logs.pod_labels."app.kubernetes.io/name"
+      }
+      if exists(%kubernetes_logs.pod_labels."app.kubernetes.io/instance") {
+        .instance = %kubernetes_logs.pod_labels."app.kubernetes.io/instance"
+      }
+      .host = .kubernetes_node = %kubernetes_logs.pod_node_name
+      .kubernetes_cluster = "red-squadron"
+      .kubernetes_namespace = %kubernetes_logs.pod_namespace
+      .kubernetes_pod_name = %kubernetes_logs.pod_name
+      .kubernetes_container_name = %kubernetes_logs.container_name
+      .kubernetes_container_image = %kubernetes_logs.container_image
+
+      ._vl.msg_field = "message"
+      ._vl.time_field = "timestamp"
+      ._vl.stream_fields = "host,service,kubernetes_pod_name,kubernetes_container_name"
+sinks:
+  prom_exporter:
+    type: prometheus_exporter
+    inputs: [host_metrics, vector_internal_metrics]
+    address: 0.0.0.0:9090
+  vector_aggregator:
+    type: vector
+    inputs: ["vl_kubernetes_logs"]
+    address: http://vector.tk831.net:6000
+    version: "2"
+    tls:
+      enabled: false

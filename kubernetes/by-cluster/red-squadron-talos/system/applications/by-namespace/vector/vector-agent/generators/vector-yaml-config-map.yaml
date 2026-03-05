@@ -1,0 +1,10 @@
+apiVersion: builtin
+kind: ConfigMapGenerator
+behavior: replace
+metadata:
+  name: vector-agent
+  namespace: vector
+files:
+- files/vector.yaml
+options:
+  disableNameSuffixHash: true
