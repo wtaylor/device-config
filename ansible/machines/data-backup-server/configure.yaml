@@ -1,27 +1,83 @@
 - hosts: data-backup-server.willtaylor.info
   remote_user: ansible
   roles:
-  # - role: ../../common/roles/create-system-groups
-  #   system_groups:
-  #   - name: rclone
-  #     gid: 2500
-  # - role: ../../common/roles/create-system-users
-  #   system_users:
-  #   - username: rclone-server
-  #     uid: 2000
-  #     groups: [rclone]
-  #   - username: rclone-sync
-  #     uid: 2001
-  #     groups: [rclone]
-  # - role: ../../common/roles/prepare-disks
-  #   disks:
-  #   - serial: viscsi-backup-data
-  #     label: backup-data
-  #     mountpoint: /var/mnt/backup/data
-  #     owner: root
-  #     group: rclone
-  #     mode: "0770"
-  # - role: ./roles/configure-rclone-server
+  - role: ../../common/roles/create-system-groups
+    system_groups:
+    - name: rclone
+      gid: 2500
+  - role: ../../common/roles/create-system-users
+    system_users:
+    - username: rclone-server
+      uid: 2000
+      groups: [rclone]
+    - username: rclone-sync
+      uid: 2001
+      groups: [rclone]
+  - role: ../../common/roles/prepare-disks
+    disks:
+    - serial: viscsi-backup-data
+      label: backup-data
+      mountpoint: /var/mnt/backup/data
+      owner: root
+      group: rclone
+      mode: "0770"
+  - role: ./roles/configure-rclone-server
   - role: ./roles/configure-rclone-sync
     systemd:
       on_calendar: "*-*-* 00:00:00"
+  - role: ../../common/roles/vector-agent
+    vector_config:
+      data_dir: /opt/vector/data
+      api:
+        enabled: true
+      schema:
+        log_namespace: true
+      sources:
+        vector_logs:
+          type: internal_logs
+        journald:
+          type: journald
+        host_metrics:
+          type: host_metrics
+          scrape_interval_secs: 60
+          filesystem:
+            devices:
+              excludes: [binfmt_misc]
+            filesystems:
+              includes:
+              - ext*
+              - xfs
+              - ntfs
+              - btrfs
+              - zfs
+              - vfat
+              - fat32
+            mountPoints:
+              excludes:
+              - "*/proc/sys/fs/binfmt_misc"
+              - "/var/lib/containers/**"
+        vector_internal_metrics:
+          type: internal_metrics
+          scrape_interval_secs: 60
+      transforms:
+        mapped_journal_logs:
+          type: remap
+          inputs: [journald]
+          source: |-
+            .message = .
+            .timestamp = %journald.timestamp
+            .host = %journald.host
+            .service = %journald.metadata._SYSTEMD_UNIT
+      sinks:
+        console:
+          type: console
+          inputs: ["vector_logs"]
+          encoding:
+            codec: text
+        vector_server:
+          type: vector
+          inputs: [host_metrics, mapped_journal_logs, vector_internal_metrics]
+          address: http://vector.tk831.net:6001
+          version: "2"
+          tls:
+            enabled: false

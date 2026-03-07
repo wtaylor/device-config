@@ -1,12 +1,20 @@
+- name: Ensure vector-agent user exists
+  become: true
+  ansible.builtin.user:
+    name: vector-agent
+    groups: [systemd-journal, docker]
+    system: true
+    create_home: false
 - name: Ensure vector directories exists
   become: true
   file:
     state: directory
     path: "{{ item }}"
-    owner: vector
-    group: vector
+    owner: vector-agent
+    group: vector-agent
     mode: '0750'
   loop:
+  - /opt/vector
   - /opt/vector/config
   - /opt/vector/data
 - name: Ensure Systemd vector.service.d Directory Exists
@@ -26,6 +34,8 @@
     mode: '0644'
     content: |
       [Service]
+      User=vector-agent
+      Group=vector-agent
       ExecStartPre=
       ExecStartPre=/usr/bin/vector validate /opt/vector/config/vector.yaml
       ExecStart=
@@ -38,11 +48,11 @@
   copy:
     content: "{{ vector_config | to_nice_yaml }}"
     dest: /opt/vector/config/vector.yaml
-    owner: vector
-    group: vector
+    owner: vector-agent
+    group: vector-agent
     mode: '0640'
   notify: Restart Vector
-- name: Enable Vector Service
+- name: Enable vector Service
   become: true
   ansible.builtin.systemd:
     daemon_reload: true

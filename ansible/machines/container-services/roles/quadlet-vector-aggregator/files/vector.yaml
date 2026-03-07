@@ -70,6 +70,7 @@ sinks:
     - vector_internal_metrics
     - vector_upstream_kubernetes_agents
     - prometheus_remote_write
+    - vector_agents
     endpoint: http://victoria-metrics:8428/api/v1/write
     healthcheck:
       enabled: false

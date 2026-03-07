@@ -2,62 +2,118 @@
   remote_user: ansible
   vars:
     proxy_network: proxy
-  pre_tasks:
-  - name: Mount ROOTS
-    local_action: ansible.builtin.shell
-    args:
-      chdir: "{{ playbook_dir }}"
-      cmd: "../../../scripts/mount_roots.sh"
-    changed_when: false
-  post_tasks:
-  - name: Unmount ROOTS
-    local_action: ansible.builtin.shell
-    args:
-      chdir: "{{ playbook_dir }}"
-      cmd: "../../../scripts/unmount_roots.sh"
-    changed_when: false
+  # pre_tasks:
+  # - name: Mount ROOTS
+  #   local_action: ansible.builtin.shell
+  #   args:
+  #     chdir: "{{ playbook_dir }}"
+  #     cmd: "../../../scripts/mount_roots.sh"
+  #   changed_when: false
+  # post_tasks:
+  # - name: Unmount ROOTS
+  #   local_action: ansible.builtin.shell
+  #   args:
+  #     chdir: "{{ playbook_dir }}"
+  #     cmd: "../../../scripts/unmount_roots.sh"
+  #   changed_when: false
   roles:
-  - role: ../../common/roles/create-system-users
-    system_users:
-    - username: openbao
-      uid: 2000
-    - username: caddy
-      uid: 2001
-  - role: ../../common/roles/prepare-disks
-    disks:
-    - serial: viscsi-vault-data
-      label: vault-data
-      mountpoint: /var/mnt/vault
-      owner: openbao
-      group: openbao
-      mode: "0700"
-  - role: ../../common/roles/quadlet-network
-    network_name: "{{ proxy_network }}"
-  - role: ./roles/configure-openbao
-    unseal_transit_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/main_vault_unseal_token') }}"
-  - role: ../../common/roles/quadlet-caddy
-    caddy_data_dir: "/var/mnt/vault/caddy"
-    cloudflare_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/cloudflare_token') }}"
-    requires_mounts_for: /var/mnt/vault
-    proxy_hosts:
-    - domain: vault.tk831.net
-      dest: http://openbao:8200
-  - role: ../../common/roles/restic-backup
-    repository:
-      url: rest:http://data-backup-server.willtaylor.info:8080/hosts/openbao-server/quadlets/openbao
-      password: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_repo_password') }}"
-      rest_username: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_rest_username') }}"
-      rest_password: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_rest_password') }}"
-    retention:
-      daily: 7
-      weekly: 4
-      monthly: 3
-      yearly: 2
-    systemd:
-      on_calendar: "*-*-* 02:00:00"
-      unit_suffix: openbao
-    backup_now: true
-    directories:
-    - /var/mnt/vault/openbao/config
-    - /var/mnt/vault/openbao/data
-    - /var/mnt/vault/medusa/export
+  # - role: ../../common/roles/create-system-users
+  #   system_users:
+  #   - username: openbao
+  #     uid: 2000
+  #   - username: caddy
+  #     uid: 2001
+  # - role: ../../common/roles/prepare-disks
+  #   disks:
+  #   - serial: viscsi-vault-data
+  #     label: vault-data
+  #     mountpoint: /var/mnt/vault
+  #     owner: openbao
+  #     group: openbao
+  #     mode: "0700"
+  # - role: ../../common/roles/quadlet-network
+  #   network_name: "{{ proxy_network }}"
+  # - role: ./roles/configure-openbao
+  #   unseal_transit_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/main_vault_unseal_token') }}"
+  # - role: ../../common/roles/quadlet-caddy
+  #   caddy_data_dir: "/var/mnt/vault/caddy"
+  #   cloudflare_token: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/cloudflare_token') }}"
+  #   requires_mounts_for: /var/mnt/vault
+  #   proxy_hosts:
+  #   - domain: vault.tk831.net
+  #     dest: http://openbao:8200
+  # - role: ../../common/roles/restic-backup
+  #   repository:
+  #     url: rest:http://data-backup-server.willtaylor.info:8080/hosts/openbao-server/quadlets/openbao
+  #     password: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_repo_password') }}"
+  #     rest_username: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_rest_username') }}"
+  #     rest_password: "{{ lookup('ansible.builtin.file', '/run/media/wtaylor/ROOTS/secrets/restic_rest_password') }}"
+  #   retention:
+  #     daily: 7
+  #     weekly: 4
+  #     monthly: 3
+  #     yearly: 2
+  #   systemd:
+  #     on_calendar: "*-*-* 02:00:00"
+  #     unit_suffix: openbao
+  #   backup_now: true
+  #   directories:
+  #   - /var/mnt/vault/openbao/config
+  #   - /var/mnt/vault/openbao/data
+  #   - /var/mnt/vault/medusa/export
+  - role: ../../common/roles/vector-agent
+    vector_config:
+      data_dir: /opt/vector/data
+      api:
+        enabled: true
+      schema:
+        log_namespace: true
+      sources:
+        vector_logs:
+          type: internal_logs
+        journald:
+          type: journald
+        host_metrics:
+          type: host_metrics
+          scrape_interval_secs: 60
+          filesystem:
+            devices:
+              excludes: [binfmt_misc]
+            filesystems:
+              includes:
+              - ext*
+              - xfs
+              - ntfs
+              - btrfs
+              - zfs
+              - vfat
+              - fat32
+            mountPoints:
+              excludes:
+              - "*/proc/sys/fs/binfmt_misc"
+              - "/var/lib/containers/**"
+        vector_internal_metrics:
+          type: internal_metrics
+          scrape_interval_secs: 60
+      transforms:
+        mapped_journal_logs:
+          type: remap
+          inputs: [journald]
+          source: |-
+            .message = .
+            .timestamp = %journald.timestamp
+            .host = %journald.host
+            .service = %journald.metadata._SYSTEMD_UNIT
+      sinks:
+        console:
+          type: console
+          inputs: ["vector_logs"]
+          encoding:
+            codec: text
+        vector_server:
+          type: vector
+          inputs: [host_metrics, mapped_journal_logs, vector_internal_metrics]
+          address: http://vector.tk831.net:6001
+          version: "2"
+          tls:
+            enabled: false

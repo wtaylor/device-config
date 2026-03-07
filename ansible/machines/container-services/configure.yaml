@@ -70,40 +70,6 @@
       dest: http://versitygw:8081
     - domain: grafana.tk831.net
       dest: http://grafana:3000
-  - role: ../../common/roles/vector-agent
-    vector_config:
-      data_dir: /opt/vector/data
-      api:
-        enabled: true
-      schema:
-        log_namespace: true
-      sources:
-        vector_logs:
-          type: internal_logs
-        journald:
-          type: journald
-      transforms:
-        mapped_journal_logs:
-          type: remap
-          inputs: [journald]
-          source: |-
-            .message = .
-            .timestamp = %journald.timestamp
-            .host = %journald.host
-            .service = %journald.metadata._SYSTEMD_UNIT
-      sinks:
-        console:
-          type: console
-          inputs: ["vector_logs"]
-          encoding:
-            codec: text
-        vector_server:
-          type: vector
-          inputs: ["mapped_journal_logs"]
-          address: http://vector.tk831.net:6001
-          version: "2"
-          tls:
-            enabled: false
   - role: ../../common/roles/restic-backup
     repository:
       url: rest:http://data-backup-server.willtaylor.info:8080/hosts/container-services/quadlets/versitygw
@@ -118,7 +84,7 @@
     systemd:
       on_calendar: "*-*-* 02:00:00"
       unit_suffix: versitygw
-    backup_now: true
+    backup_now: false
     directories:
     - /var/mnt/versitygw/data
   - role: ../../common/roles/restic-backup
@@ -135,7 +101,7 @@
     systemd:
       on_calendar: "*-*-* 02:00:00"
       unit_suffix: grafana
-    backup_now: true
+    backup_now: false
     directories:
     - /var/mnt/grafana/data
   - role: ../../common/roles/restic-backup
@@ -152,7 +118,7 @@
     systemd:
       on_calendar: "*-*-* 02:00:00"
       unit_suffix: victoria-logs
-    backup_now: true
+    backup_now: false
     directories:
     - /var/mnt/victorialogs/data
   - role: ../../common/roles/restic-backup
@@ -186,6 +152,62 @@
     systemd:
       on_calendar: "*-*-* 02:00:00"
       unit_suffix: caddy
-    backup_now: true
+    backup_now: false
     directories:
     - /var/mnt/caddy/data
+  - role: ../../common/roles/vector-agent
+    vector_config:
+      data_dir: /opt/vector/data
+      api:
+        enabled: true
+      schema:
+        log_namespace: true
+      sources:
+        vector_logs:
+          type: internal_logs
+        journald:
+          type: journald
+        host_metrics:
+          type: host_metrics
+          scrape_interval_secs: 60
+          filesystem:
+            devices:
+              excludes: [binfmt_misc]
+            filesystems:
+              includes:
+              - ext*
+              - xfs
+              - ntfs
+              - btrfs
+              - zfs
+              - vfat
+              - fat32
+            mountPoints:
+              excludes:
+              - "*/proc/sys/fs/binfmt_misc"
+              - "/var/lib/containers/**"
+        vector_internal_metrics:
+          type: internal_metrics
+          scrape_interval_secs: 60
+      transforms:
+        mapped_journal_logs:
+          type: remap
+          inputs: [journald]
+          source: |-
+            .message = .
+            .timestamp = %journald.timestamp
+            .host = %journald.host
+            .service = %journald.metadata._SYSTEMD_UNIT
+      sinks:
+        console:
+          type: console
+          inputs: ["vector_logs"]
+          encoding:
+            codec: text
+        vector_server:
+          type: vector
+          inputs: [host_metrics, mapped_journal_logs, vector_internal_metrics]
+          address: http://vector.tk831.net:6001
+          version: "2"
+          tls:
+            enabled: false
