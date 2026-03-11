@@ -1,0 +1,9 @@
+- name: Add NOPASSWD rule to sudo group
+  become: true
+  ansible.builtin.copy:
+    content: |
+      %sudo        ALL=(ALL)       NOPASSWD: ALL
+    dest: /etc/sudoers.d/ansible-sudo-nopasswd
+    owner: root
+    group: root
+    mode: '0440'

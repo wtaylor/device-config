@@ -1,0 +1,22 @@
+- name: Install Dependencies
+  become: true
+  ansible.builtin.apt:
+    state: present
+    name:
+    - python3-debian
+    - bzip2
+- name: Download restic archive
+  ansible.builtin.get_url:
+    url: https://github.com/restic/restic/releases/download/v0.18.1/restic_0.18.1_linux_amd64.bz2
+    dest: /tmp/restic.bz2
+    mode: "0644"
+- name: Decompress restic
+  become: true
+  ansible.builtin.shell:
+    cmd: "bunzip2 -kf /tmp/restic.bz2 && rsync -a /tmp/restic /usr/local/bin/restic"
+    creates: /usr/local/bin/restic
+- name: Ensure restic permissions are correct
+  become: true
+  ansible.builtin.file:
+    path: /usr/local/bin/restic
+    mode: '0755'

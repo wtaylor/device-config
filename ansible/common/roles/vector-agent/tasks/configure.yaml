@@ -2,7 +2,7 @@
   become: true
   ansible.builtin.user:
     name: vector-agent
-    groups: [systemd-journal, docker]
+    groups: "{{ agent_user.groups | default([\"systemd-journal\", \"docker\"]) }}"
     system: true
     create_home: false
 - name: Ensure vector directories exists

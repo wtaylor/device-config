@@ -1,0 +1,82 @@
+- hosts: nas-omv.willtaylor.info
+  remote_user: wtaylor
+  roles:
+  - role: ../../common/roles/sudo-nopasswd
+  - role: ../../common/roles/restic-backup
+    install_restic: true
+    repository:
+      url: rest:http://data-backup-server.willtaylor.info:8080/hosts/nas-omv/shares
+      password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.repoPassword }}"
+      rest_username: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+      rest_password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
+    retention:
+      daily: 7
+      weekly: 4
+      monthly: 3
+      yearly: 1
+    systemd:
+      on_calendar: "*-*-* 02:00:00"
+      unit_suffix: shares
+    backup_now: false
+    directories:
+    - /srv/dev-disk-by-uuid-43178504-6eb9-4a28-b90c-d5499fade5af/user_homes
+    - /srv/dev-disk-by-uuid-43178504-6eb9-4a28-b90c-d5499fade5af/home_shared
+  - role: ../../common/roles/vector-agent
+    install: true
+    agent_user:
+      groups: [systemd-journal]
+    vector_config:
+      data_dir: /opt/vector/data
+      api:
+        enabled: true
+      schema:
+        log_namespace: true
+      sources:
+        vector_logs:
+          type: internal_logs
+        journald:
+          type: journald
+        host_metrics:
+          type: host_metrics
+          scrape_interval_secs: 60
+          filesystem:
+            devices:
+              excludes: [binfmt_misc]
+            filesystems:
+              includes:
+              - ext*
+              - xfs
+              - ntfs
+              - btrfs
+              - zfs
+              - vfat
+              - fat32
+            mountPoints:
+              excludes:
+              - "*/proc/sys/fs/binfmt_misc"
+              - "/var/lib/containers/**"
+        vector_internal_metrics:
+          type: internal_metrics
+          scrape_interval_secs: 60
+      transforms:
+        mapped_journal_logs:
+          type: remap
+          inputs: [journald]
+          source: |-
+            .message = .
+            .timestamp = %journald.timestamp
+            .host = %journald.host
+            .service = %journald.metadata._SYSTEMD_UNIT
+      sinks:
+        console:
+          type: console
+          inputs: ["vector_logs"]
+          encoding:
+            codec: text
+        vector_server:
+          type: vector
+          inputs: [host_metrics, mapped_journal_logs, vector_internal_metrics]
+          address: http://vector.tk831.net:6001
+          version: "2"
+          tls:
+            enabled: false

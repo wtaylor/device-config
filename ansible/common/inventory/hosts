@@ -14,6 +14,7 @@ container-services.willtaylor.info
 data-backup-server.willtaylor.info
 rootn.willtaylor.info
 openbao-server.willtaylor.info
+nas-omv.willtaylor.info
 
 [all:vars]
 ansible_python_interpreter=auto_silent
