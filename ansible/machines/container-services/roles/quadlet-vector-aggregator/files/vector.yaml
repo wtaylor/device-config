@@ -26,6 +26,16 @@ sources:
     type: journald
     include_units:
     - vector.service
+  prom_scrape_tardis:
+    type: prometheus_scrape
+    scrape_interval_secs: 60
+    endpoints:
+    - http://prometheus-pve-exporter:9221/pve?target=tardis.willtaylor.info&module=tardis&cluster=1&node=1
+  prom_scrape_rs:
+    type: prometheus_scrape
+    scrape_interval_secs: 60
+    endpoints:
+    - http://prometheus-pve-exporter:9221/pve?target=red-one.willtaylor.info&module=redsquadron&cluster=1&node=1
   vector_upstream_kubernetes_agents: &vector_source_defaults
     type: vector
     address: 0.0.0.0:6000
@@ -55,6 +65,16 @@ sources:
       codec: json
     host_key: __host
 transforms:
+  prom_scrape_tardis_enrich:
+    type: remap
+    inputs: [prom_scrape_tardis]
+    source: |-
+      .tags.cluster = "tardis"
+  prom_scrape_rs_enrich:
+    type: remap
+    inputs: [prom_scrape_rs]
+    source: |-
+      .tags.cluster = "red-squadron"
   mapped_internal_journal_logs:
     type: remap
     inputs: [vector_internal_logs]
@@ -71,6 +91,8 @@ sinks:
     - vector_upstream_kubernetes_agents
     - prometheus_remote_write
     - vector_agents
+    - prom_scrape_tardis_enrich
+    - prom_scrape_rs_enrich
     endpoint: http://victoria-metrics:8428/api/v1/write
     healthcheck:
       enabled: false

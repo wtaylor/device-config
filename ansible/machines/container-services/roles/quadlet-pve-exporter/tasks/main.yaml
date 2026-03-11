@@ -1,0 +1,67 @@
+- name: Create user - pve-exporter
+  become: true
+  ansible.builtin.user:
+    name: pve-exporter
+    uid: 2006
+    system: true
+    groups: []
+- name: Ensure prometheus-pve-exporter directories exist
+  become: true
+  loop:
+  - /var/mnt/pve-exporter
+  - /var/mnt/pve-exporter/config
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: pve-exporter
+    group: pve-exporter
+    mode: '0750'
+- name: Create pve.yml configuration
+  become: true
+  ansible.builtin.copy:
+    content: |
+      tardis:
+        user: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'terraform/host-tardis/outputs/proxmox-metrics-user', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+        password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'terraform/host-tardis/outputs/proxmox-metrics-user', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
+        verify_ssl: false
+      redsquadron:
+        user: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'terraform/host-red-squadron/outputs/proxmox-metrics-user', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+        password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'terraform/host-red-squadron/outputs/proxmox-metrics-user', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
+        verify_ssl: false
+    dest: /var/mnt/pve-exporter/config/pve.yml
+    owner: pve-exporter
+    group: pve-exporter
+    mode: '0640'
+  register: config
+- name: Create prometheus-pve-exporter quadlet
+  become: true
+  containers.podman.podman_container:
+    name: prometheus-pve-exporter
+    state: quadlet
+    image: docker.io/prompve/prometheus-pve-exporter:3.8.1
+    user: "0:0"
+    uidmap: ["0:2006"]
+    gidmap: ["0:2006"]
+    volume:
+    - /var/mnt/pve-exporter/config:/etc/prometheus:z
+    network:
+    - podman
+    - observability-stack.network
+    ports:
+    - "9221:9221"
+    quadlet_options:
+    - |
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: (Re)start prometheus-pve-exporter service
+  become: true
+  ansible.builtin.systemd:
+    name: prometheus-pve-exporter
+    daemon_reload: true
+    enabled: true
+    state: "{{ 'restarted' if (container_definition.changed or config.changed) else 'started' }}"
