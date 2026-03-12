@@ -22,6 +22,7 @@
       group: rclone
       mode: "0770"
   - role: ./roles/configure-rclone-server
+    tags: [restic-server]
   - role: ./roles/configure-rclone-sync
     systemd:
       on_calendar: "*-*-* 00:00:00"
