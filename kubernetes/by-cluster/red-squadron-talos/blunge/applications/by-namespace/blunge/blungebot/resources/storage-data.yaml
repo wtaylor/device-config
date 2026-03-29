@@ -38,7 +38,6 @@ metadata:
     app.kubernetes.io/name: blungebot
 spec:
   storageClassName: proxmox-zfs
-  volumeName: pvc-dc8db105-227d-476f-8078-30570fc40d67
   accessModes:
   - ReadWriteOnce
   resources:
