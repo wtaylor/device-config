@@ -1,0 +1,51 @@
+http:
+  listen: 0.0.0.0:8080
+collector:
+  interval: 30m
+restic:
+  cache_dir: /mnt/cache
+  repositories:
+  - name: volumes/immich-library
+    url: /mnt/data/restic/volumes/immich-library
+  - name: volumes/bitwarden-data
+    url: /mnt/data/restic/volumes/bitwarden-data
+  - name: volumes/blungebot-data
+    url: /mnt/data/restic/volumes/blungebot-data
+  - name: volumes/bookstack-data
+    url: /mnt/data/restic/volumes/bookstack-data
+  - name: volumes/gitea-data
+    url: /mnt/data/restic/volumes/gitea-data
+  - name: volumes/gitea-git
+    url: /mnt/data/restic/volumes/gitea-git
+  - name: volumes/gitea-ssh
+    url: /mnt/data/restic/volumes/gitea-ssh
+  - name: volumes/homeassistant-data
+    url: /mnt/data/restic/volumes/homeassistant-data
+  - name: volumes/joplin-data
+    url: /mnt/data/restic/volumes/joplin-data
+  - name: volumes/nextcloud-data
+    url: /mnt/data/restic/volumes/nextcloud-data
+  - name: volumes/nodered-data
+    url: /mnt/data/restic/volumes/nodered-data
+  - name: volumes/paperless-data
+    url: /mnt/data/restic/volumes/paperless-data
+  - name: volumes/paperless-trash
+    url: /mnt/data/restic/volumes/paperless-trash
+  - name: volumes/zigbee2mqtt-data
+    url: /mnt/data/restic/volumes/zigbee2mqtt-data
+  - name: hosts/container-services/quadlets/caddy
+    url: /mnt/data/restic/hosts/container-services/quadlets/caddy
+  - name: hosts/container-services/quadlets/grafana
+    url: /mnt/data/restic/hosts/container-services/quadlets/grafana
+  - name: hosts/container-services/quadlets/versitygw
+    url: /mnt/data/restic/hosts/container-services/quadlets/versitygw
+  - name: hosts/container-services/quadlets/victoria-logs
+    url: /mnt/data/restic/hosts/container-services/quadlets/victoria-logs
+  - name: hosts/container-services/quadlets/victoria-metrics
+    url: /mnt/data/restic/hosts/container-services/quadlets/victoria-metrics
+  - name: hosts/nas-omv/shares
+    url: /mnt/data/restic/hosts/nas-omv/shares
+  - name: hosts/openbao-server/quadlets/openbao
+    url: /mnt/data/restic/hosts/openbao-server/quadlets/openbao
+  - name: hosts/rootn
+    url: /mnt/data/restic/hosts/rootn

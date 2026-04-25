@@ -1,11 +1,22 @@
 - name: Ensure restic data directory exists
   become: true
+  loop:
+  - /var/mnt/backup/data/restic
+  - /var/mnt/backup/data/rpe
+  - /var/mnt/backup/data/rpe/config
+  - /var/mnt/backup/data/rpe/cache
   ansible.builtin.file:
-    path: /var/mnt/backup/data/restic
+    path: "{{ item }}"
     state: directory
     owner: root
     group: rclone
     mode: '0770'
+- name: Create restic_repo_password secret
+  become: true
+  containers.podman.podman_secret:
+    state: present
+    name: restic_repo_password
+    data: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.repoPassword }}"
 - name: Create restic_username secret
   become: true
   containers.podman.podman_secret:
@@ -35,7 +46,7 @@
     ports:
     - "8080:8080"
     quadlet_options:
-    - |2
+    - |
       [Unit]
       RequiresMountsFor=/var/mnt/backup/data
 
@@ -46,6 +57,42 @@
       [Install]
       WantedBy=default.target
   register: container_definition
+- name: Copy rustic-prometheus-exporter configuration
+  become: true
+  ansible.builtin.copy:
+    src: rpe-config.yaml
+    dest: /var/mnt/backup/data/rpe/config/config.yaml
+    owner: root
+    group: rclone
+    mode: "0640"
+- name: Create rustic-prometheus-exporter quadlet
+  become: true
+  containers.podman.podman_container:
+    name: rustic-prometheus-exporter
+    state: quadlet
+    image: ghcr.io/wtaylor/rustic-prometheus-exporter:0.3.0
+    uidmap: ["0:2000"]
+    gidmap: ["0:2500"]
+    secrets:
+    - restic_repo_password,type=env,target=RPE__RESTIC__DEFAULTS__PASSWORD
+    volume:
+    - /var/mnt/backup/data/restic:/mnt/data/restic:z
+    - /var/mnt/backup/data/rpe/config:/etc/rustic-prometheus-exporter:z
+    - /var/mnt/backup/data/rpe/cache:/mnt/cache:z
+    ports:
+    - "9090:8080"
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/backup/data
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: rpe_container_definition
 - name: systemd daemon-reload
   become: true
   ansible.builtin.systemd:
@@ -56,3 +103,9 @@
     name: rclone-restic-server
     enabled: true
     state: "{{ 'restarted' if container_definition.changed else 'started' }}"
+- name: (Re)start rustic-prometheus-exporter service
+  become: true
+  ansible.builtin.systemd:
+    name: rustic-prometheus-exporter
+    enabled: true
+    state: "{{ 'restarted' if rpe_container_definition.changed else 'started' }}"

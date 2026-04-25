@@ -36,6 +36,11 @@ sources:
     scrape_interval_secs: 60
     endpoints:
     - http://prometheus-pve-exporter:9221/pve?target=red-one.willtaylor.info&module=redsquadron&cluster=1&node=1
+  prom_scrape_backups:
+    type: prometheus_scrape
+    scrape_interval_secs: 60
+    endpoints:
+    - http://data-backup-server.willtaylor.info:9090/metrics
   vector_upstream_kubernetes_agents: &vector_source_defaults
     type: vector
     address: 0.0.0.0:6000
@@ -93,6 +98,7 @@ sinks:
     - vector_agents
     - prom_scrape_tardis_enrich
     - prom_scrape_rs_enrich
+    - prom_scrape_backups
     endpoint: http://victoria-metrics:8428/api/v1/write
     healthcheck:
       enabled: false
