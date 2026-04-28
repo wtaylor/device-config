@@ -16,8 +16,6 @@
     name: databasus
     state: quadlet
     image: docker.io/databasus/databasus:v3.32.2
-    # uidmap: ["0:2000", "100:2000"]
-    # gidmap: ["0:2500", "102:2500"]
     volume:
     - /var/mnt/backup/data/databasus/data:/databasus-data:z
     - /var/mnt/backup/data/databasus/backups:/mnt/databasus-backups:z

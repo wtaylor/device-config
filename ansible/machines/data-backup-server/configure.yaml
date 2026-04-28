@@ -25,7 +25,24 @@
   - role: ./roles/configure-databasus
   - role: ./roles/configure-rclone-sync
     systemd:
-      on_calendar: "*-*-* 00:00:00"
+      on_calendar: "*-*-* 03:00:00"
+  - role: ../../common/roles/restic-backup
+    repository:
+      url: rest:http://data-backup-server.willtaylor.info:8080/hosts/data-backup-server/quadlets/databasus
+      password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.repoPassword }}"
+      rest_username: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.username }}"
+      rest_password: "{{ (lookup('community.hashi_vault.vault_kv2_get', 'system/data-backup-server/restic_credentials', url=vault_address, engine_mount_point=vault_secret_mount)).secret.password }}"
+    retention:
+      daily: 2
+      weekly: 0
+      monthly: 0
+      yearly: 0
+    systemd:
+      on_calendar: "*-*-* 02:00:00"
+      unit_suffix: databasus
+    backup_now: true
+    directories:
+    - /var/mnt/backup/data/databasus
   - role: ../../common/roles/vector-agent
     vector_config:
       data_dir: /opt/vector/data

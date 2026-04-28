@@ -36,8 +36,6 @@
     name: rclone-sync
     state: quadlet
     image: ghcr.io/rclone/rclone:1.72.1
-    uidmap: ["0:2001"]
-    gidmap: ["0:2500"]
     command: [sync, /mnt/data, 'storage_box:data-backup-server']
     volume:
     - /var/mnt/backup/data/restic:/mnt/data/restic:z
