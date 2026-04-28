@@ -1,0 +1,47 @@
+- name: Ensure databasus data directories exist
+  become: true
+  loop:
+  - /var/mnt/backup/data/databasus
+  - /var/mnt/backup/data/databasus/data
+  - /var/mnt/backup/data/databasus/backups
+  ansible.builtin.file:
+    path: "{{ item }}"
+    state: directory
+    owner: root
+    group: rclone
+    mode: '0770'
+- name: Create rclone-restic-server quadlet
+  become: true
+  containers.podman.podman_container:
+    name: databasus
+    state: quadlet
+    image: docker.io/databasus/databasus:v3.32.2
+    # uidmap: ["0:2000", "100:2000"]
+    # gidmap: ["0:2500", "102:2500"]
+    volume:
+    - /var/mnt/backup/data/databasus/data:/databasus-data:z
+    - /var/mnt/backup/data/databasus/backups:/mnt/databasus-backups:z
+    ports:
+    - "8081:4005"
+    quadlet_options:
+    - |
+      [Unit]
+      RequiresMountsFor=/var/mnt/backup/data
+
+      [Service]
+      Restart=on-failure
+      RestartSec=5s
+
+      [Install]
+      WantedBy=default.target
+  register: container_definition
+- name: systemd daemon-reload
+  become: true
+  ansible.builtin.systemd:
+    daemon_reload: true
+- name: (Re)start databasus service
+  become: true
+  ansible.builtin.systemd:
+    name: databasus
+    enabled: true
+    state: "{{ 'restarted' if container_definition.changed else 'started' }}"

@@ -70,6 +70,8 @@
       dest: http://versitygw:8081
     - domain: grafana.tk831.net
       dest: http://grafana:3000
+    - domain: databasus.tk831.net
+      dest: http://data-backup-server.willtaylor.info:8081
   - role: ./roles/quadlet-pve-exporter
   - role: ../../common/roles/restic-backup
     repository:

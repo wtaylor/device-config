@@ -57,6 +57,15 @@ spec:
       login: true
       passwordSecret:
         name: postgres-tk831-default-role-joplin
+    services:
+      additional:
+      - selectorType: rw
+        serviceTemplate:
+          metadata:
+            name: "postgres-default-lan-rw"
+          spec:
+            type: LoadBalancer
+            loadBalancerIP: 172.28.3.136
   resources:
     requests:
       memory: "512Mi"
