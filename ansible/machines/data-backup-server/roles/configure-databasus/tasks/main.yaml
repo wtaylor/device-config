@@ -18,7 +18,6 @@
     image: docker.io/databasus/databasus:v3.32.2
     volume:
     - /var/mnt/backup/data/databasus/data:/databasus-data:z
-    - /var/mnt/backup/data/databasus/backups:/mnt/databasus-backups:z
     ports:
     - "8081:4005"
     quadlet_options:

@@ -15,7 +15,7 @@ sources:
         excludes: [binfmt_misc]
       filesystems:
         excludes: [binfmt_misc]
-      mountPoints:
+      mountpoints:
         excludes: ["*/proc/sys/fs/binfmt_misc"]
   vector_internal_metrics:
     type: internal_metrics
